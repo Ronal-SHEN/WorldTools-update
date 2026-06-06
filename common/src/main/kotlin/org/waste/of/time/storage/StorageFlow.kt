@@ -5,7 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
-import net.minecraft.util.path.SymlinkValidationException
+import net.minecraft.world.level.validation.ContentValidationException
 import org.waste.of.time.WorldTools
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.mc
@@ -40,7 +40,7 @@ object StorageFlow {
 
         try {
             LOG.info("Started caching")
-            mc.levelStorage.createSession(levelName).use { openSession ->
+            mc.levelSource.createSession(levelName).use { openSession ->
                 sharedFlow.collect { storeable ->
                     if (!storeable.shouldStore()) {
                         return@collect
@@ -68,8 +68,8 @@ object StorageFlow {
         } catch (e: IOException) {
             LOG.error("IOException: Failed to create session for $levelName", e)
             MessageManager.sendError("worldtools.log.error.failed_to_create_session", levelName, e.localizedMessage)
-        } catch (e: SymlinkValidationException) {
-            LOG.error("SymlinkValidationException: Failed to create session for $levelName", e)
+        } catch (e: ContentValidationException) {
+            LOG.error("ContentValidationException: Failed to create session for $levelName", e)
             MessageManager.sendError("worldtools.log.error.failed_to_create_session", levelName, e.localizedMessage)
         } catch (e: CancellationException) {
             LOG.info("Canceled caching thread")

@@ -1,13 +1,13 @@
 package org.waste.of.time.storage.serializable
 
 import net.minecraft.SharedConstants
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtIntArray
-import net.minecraft.nbt.NbtList
-import net.minecraft.text.MutableText
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.world.World
-import net.minecraft.world.level.storage.LevelStorage
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.IntArrayTag
+import net.minecraft.nbt.ListTag
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.config
 import org.waste.of.time.manager.MessageManager.translateHighlight
@@ -20,11 +20,11 @@ import org.waste.of.time.storage.cache.EntityCacheable
 class RegionBasedEntities(
     chunkPos: ChunkPos,
     val entities: Set<EntityCacheable>, // can be empty, signifies we should clear any previously saved entities
-    world: World
+    world: Level
 ) : RegionBased(chunkPos, world, "entities") {
     override fun shouldStore() = config.general.capture.entities
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.entities",
             stackEntities(),
@@ -32,29 +32,29 @@ class RegionBasedEntities(
             dimension
         )
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.entities.anonymized",
             stackEntities(),
             dimension
         )
 
-    override fun compound() = NbtCompound().apply {
-        put("Entities", NbtList().apply {
+    override fun compound() = CompoundTag().apply {
+        put("Entities", ListTag().apply {
             entities.forEach { entity ->
                 add(entity.compound())
             }
         })
 
-        putInt("DataVersion", SharedConstants.getGameVersion().saveVersion.id)
-        put("Position", NbtIntArray(intArrayOf(chunkPos.x, chunkPos.z)))
+        putInt("DataVersion", SharedConstants.getCurrentVersion().saveVersion.id)
+        put("Position", IntArrayTag(intArrayOf(chunkPos.x, chunkPos.z)))
         if (config.debug.logSavedEntities) {
             entities.forEach { entity -> LOG.info("Entity saved: $entity (Chunk: $chunkPos)") }
         }
     }
 
     override fun writeToStorage(
-        session: LevelStorage.Session,
+        session: LevelStorageSource.LevelStorageAccess,
         storage: CustomRegionBasedStorage,
         cachedStorages: MutableMap<String, CustomRegionBasedStorage>
     ) {

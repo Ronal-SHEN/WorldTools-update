@@ -1,28 +1,28 @@
 package org.waste.of.time.storage.serializable
 
 import net.minecraft.SharedConstants
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.fluid.Fluid
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtList
-import net.minecraft.nbt.NbtLongArray
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.ListTag
+import net.minecraft.nbt.LongArrayTag
 import net.minecraft.nbt.NbtOps
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.text.MutableText
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkSectionPos
-import net.minecraft.world.LightType
-import net.minecraft.world.biome.BiomeKeys
-import net.minecraft.world.chunk.BelowZeroRetrogen
-import net.minecraft.world.chunk.PalettedContainer
-import net.minecraft.world.chunk.SerializedChunk
-import net.minecraft.world.chunk.WorldChunk
-import net.minecraft.world.gen.chunk.BlendingData
-import net.minecraft.world.level.storage.LevelStorage
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.core.BlockPos
+import net.minecraft.core.SectionPos
+import net.minecraft.world.level.LightLayer
+import net.minecraft.world.level.biome.Biomes
+import net.minecraft.world.level.levelgen.BelowZeroRetrogen
+import net.minecraft.world.level.chunk.PalettedContainer
+import net.minecraft.world.level.chunk.storage.SerializableChunkData
+import net.minecraft.world.level.chunk.LevelChunk
+import net.minecraft.world.level.levelgen.blending.BlendingData
+import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.TIMESTAMP_KEY
 import org.waste.of.time.WorldTools.config
@@ -35,7 +35,7 @@ import org.waste.of.time.storage.RegionBased
 import org.waste.of.time.storage.cache.HotCache
 
 open class RegionBasedChunk(
-    val chunk: WorldChunk,
+    val chunk: LevelChunk,
 ) : RegionBased(chunk.pos, chunk.world, "region"), Cacheable {
     // storing a reference to the block entities in the chunk to prevent them from being unloaded
     val cachedBlockEntities = mutableMapOf<BlockPos, BlockEntity>()
@@ -53,29 +53,29 @@ open class RegionBasedChunk(
 
     override fun shouldStore() = config.general.capture.chunks
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.chunks",
             chunkPos,
             dimension
         )
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.chunks.anonymized",
             dimension
         )
 
-    private val stateIdContainer = PalettedContainer.createPalettedContainerCodec(
+    private val stateIdContainer = PalettedContainer.codecRW(
         Block.STATE_IDS,
-        BlockState.CODEC,
+        BlockState.BLOCK_STATE_CODEC,
         PalettedContainer.PaletteProvider.BLOCK_STATE,
         Blocks.AIR.defaultState
     )
 
     override fun cache() {
         HotCache.chunks[chunkPos] = this
-        HotCache.savedChunks.add(chunkPos.toLong())
+        HotCache.savedChunks.add(chunkPos.asLong())
     }
 
     override fun flush() {
@@ -88,7 +88,7 @@ open class RegionBasedChunk(
     }
 
     override fun writeToStorage(
-        session: LevelStorage.Session,
+        session: LevelStorageSource.LevelStorageAccess,
         storage: CustomRegionBasedStorage,
         cachedStorages: MutableMap<String, CustomRegionBasedStorage>
     ) {
@@ -108,32 +108,32 @@ open class RegionBasedChunk(
     /**
      * See [net.minecraft.world.ChunkSerializer.serialize]
      */
-    override fun compound() = NbtCompound().apply {
+    override fun compound() = CompoundTag().apply {
         if (config.world.metadata.captureTimestamp) {
             putLong(TIMESTAMP_KEY, System.currentTimeMillis())
         }
 
-        putInt("DataVersion", SharedConstants.getGameVersion().saveVersion.id)
-        putInt(SerializedChunk.X_POS_KEY, chunk.pos.x)
+        putInt("DataVersion", SharedConstants.getCurrentVersion().saveVersion.id)
+        putInt(SerializableChunkData.X_POS_TAG, chunk.pos.x)
         putInt("yPos", chunk.bottomSectionCoord)
-        putInt(SerializedChunk.Z_POS_KEY, chunk.pos.z)
+        putInt(SerializableChunkData.Z_POS_TAG, chunk.pos.z)
         putLong("LastUpdate", chunk.world.time)
         putLong("InhabitedTime", chunk.inhabitedTime)
-        putString("Status", Registries.CHUNK_STATUS.getId(chunk.status).toString())
+        putString("Status", BuiltInRegistries.CHUNK_STATUS.getId(chunk.status).toString())
 
         genBackwardsCompat(chunk)
 
         if (!chunk.upgradeData.isDone) {
-            put("UpgradeData", chunk.upgradeData.toNbt())
+            put("UpgradeData", chunk.upgradeData.packOffsets())
         }
 
-        put(SerializedChunk.SECTIONS_KEY, generateSections(chunk))
+        put(SerializableChunkData.SECTIONS_TAG, generateSections(chunk))
 
         if (chunk.isLightOn) {
-            putBoolean(SerializedChunk.IS_LIGHT_ON_KEY, true)
+            putBoolean(SerializableChunkData.IS_LIGHT_ON_TAG, true)
         }
 
-        put("block_entities", NbtList().apply {
+        put("block_entities", ListTag().apply {
             upsertBlockEntities()
         })
 
@@ -145,9 +145,9 @@ open class RegionBasedChunk(
             LOG.info("Chunk saved: $chunkPos ($dimension)")
     }
 
-    private fun NbtList.upsertBlockEntities() {
+    private fun ListTag.upsertBlockEntities() {
         cachedBlockEntities.entries.map { (_, blockEntity) ->
-            blockEntity.createNbtWithIdentifyingData(world.registryManager).apply {
+            blockEntity.saveWithFullMetadata(world.registryManager).apply {
                 putBoolean("keepPacked", false)
             }
         }.apply {
@@ -155,10 +155,10 @@ open class RegionBasedChunk(
         }
     }
 
-    private fun generateSections(chunk: WorldChunk) = NbtList().apply {
-        val biomeRegistry = chunk.world.registryManager.getOptional(RegistryKeys.BIOME).orElse(null) ?: return@apply
-        val defaultValue = biomeRegistry.getOptional(BiomeKeys.PLAINS).orElse(null) ?: return@apply
-        val biomeCodec = PalettedContainer.createReadableContainerCodec(
+    private fun generateSections(chunk: LevelChunk) = ListTag().apply {
+        val biomeRegistry = chunk.world.registryManager.getOptional(BuiltInRegistries.BIOME).orElse(null) ?: return@apply
+        val defaultValue = biomeRegistry.getOptional(Biomes.PLAINS).orElse(null) ?: return@apply
+        val biomeCodec = PalettedContainer.codecRO(
             biomeRegistry.indexedEntries,
             biomeRegistry.entryCodec,
             PalettedContainer.PaletteProvider.BIOME,
@@ -170,13 +170,13 @@ open class RegionBasedChunk(
             val sectionCoord = chunk.sectionCoordToIndex(y)
             val inSection = sectionCoord in (0 until chunk.sectionArray.size)
             val blockLightSection =
-                lightingProvider[LightType.BLOCK].getLightSection(ChunkSectionPos.from(chunk.pos, y))
+                lightingProvider[LightLayer.BLOCK].getLightSection(SectionPos.of(chunk.pos, y))
             val skyLightSection =
-                lightingProvider[LightType.SKY].getLightSection(ChunkSectionPos.from(chunk.pos, y))
+                lightingProvider[LightLayer.SKY].getLightSection(SectionPos.of(chunk.pos, y))
 
             if (!inSection && blockLightSection == null && skyLightSection == null) return@forEach
 
-            add(NbtCompound().apply {
+            add(CompoundTag().apply {
                 if (inSection) {
                     val chunkSection = chunk.sectionArray[sectionCoord]
                     /**
@@ -186,24 +186,24 @@ open class RegionBasedChunk(
                      * Force disabling checking the lock's status here as it should be safe to
                      * read here, no write operations should happen after the chunk is unloaded
                      */
-                    (chunkSection.blockStateContainer as IPalettedContainerExtension).setWTIgnoreLock(true)
-                    (chunkSection.biomeContainer as IPalettedContainerExtension).setWTIgnoreLock(true)
+                    (chunkSection.states as IPalettedContainerExtension).setWTIgnoreLock(true)
+                    (chunkSection.biomes as IPalettedContainerExtension).setWTIgnoreLock(true)
                     put(
                         "block_states",
-                        stateIdContainer.encodeStart(NbtOps.INSTANCE, chunkSection.blockStateContainer).getOrThrow()
+                        stateIdContainer.encodeStart(NbtOps.INSTANCE, chunkSection.states).getOrThrow()
                     )
                     put(
                         "biomes",
-                        biomeCodec.encodeStart(NbtOps.INSTANCE, chunkSection.biomeContainer).getOrThrow()
+                        biomeCodec.encodeStart(NbtOps.INSTANCE, chunkSection.biomes).getOrThrow()
                     )
-                    (chunkSection.blockStateContainer as IPalettedContainerExtension).setWTIgnoreLock(false)
-                    (chunkSection.biomeContainer as IPalettedContainerExtension).setWTIgnoreLock(false)
+                    (chunkSection.states as IPalettedContainerExtension).setWTIgnoreLock(false)
+                    (chunkSection.biomes as IPalettedContainerExtension).setWTIgnoreLock(false)
                 }
                 if (blockLightSection != null && !blockLightSection.isUninitialized) {
-                    putByteArray(SerializedChunk.BLOCK_LIGHT_KEY, blockLightSection.asByteArray())
+                    putByteArray(SerializableChunkData.BLOCK_LIGHT_TAG, blockLightSection.asByteArray())
                 }
                 if (skyLightSection != null && !skyLightSection.isUninitialized) {
-                    putByteArray(SerializedChunk.SKY_LIGHT_KEY, skyLightSection.asByteArray())
+                    putByteArray(SerializableChunkData.SKY_LIGHT_TAG, skyLightSection.asByteArray())
                 }
                 if (isEmpty) return@forEach
                 putByte("Y", y.toByte())
@@ -211,9 +211,9 @@ open class RegionBasedChunk(
         }
     }
 
-    private fun NbtCompound.genBackwardsCompat(chunk: WorldChunk) {
+    private fun CompoundTag.genBackwardsCompat(chunk: LevelChunk) {
         chunk.blendingData?.let { bleedingData ->
-            BlendingData.Serialized.CODEC.encodeStart(NbtOps.INSTANCE, bleedingData.toSerialized()).resultOrPartial {
+            BlendingData.Serialized.BLOCK_STATE_CODEC.encodeStart(NbtOps.INSTANCE, bleedingData.pack()).resultOrPartial {
                 LOG.error(it)
             }.ifPresent {
                 put("blending_data", it)
@@ -221,7 +221,7 @@ open class RegionBasedChunk(
         }
 
         chunk.belowZeroRetrogen?.let { belowZeroRetrogen ->
-            BelowZeroRetrogen.CODEC.encodeStart(NbtOps.INSTANCE, belowZeroRetrogen).resultOrPartial {
+            BelowZeroRetrogen.BLOCK_STATE_CODEC.encodeStart(NbtOps.INSTANCE, belowZeroRetrogen).resultOrPartial {
                 LOG.error(it)
             }.ifPresent {
                 put("below_zero_retrogen", it)
@@ -229,28 +229,28 @@ open class RegionBasedChunk(
         }
     }
 
-    private fun NbtCompound.getTickSchedulers(chunk: WorldChunk) {
-        val time = chunk.world.levelProperties.time
+    private fun CompoundTag.getTickSchedulers(chunk: LevelChunk) {
+        val time = chunk.world.levelData.time
         val tickSchedulers = chunk.getTickSchedulers(time)
 
         val blockTickSchedulers = tickSchedulers.blocks.map { ticker ->
-            ticker.toNbt { Registries.BLOCK.getId(it).toString()}
+            ticker.packOffsets { BuiltInRegistries.BLOCK.getId(it).toString()}
         }
-        put("block_ticks", NbtList().apply { addAll(blockTickSchedulers) })
+        put("block_ticks", ListTag().apply { addAll(blockTickSchedulers) })
         val fluidTickSchedulers = tickSchedulers.fluids.map { ticker ->
-            ticker.toNbt { Registries.FLUID.getId(it).toString()}
+            ticker.packOffsets { BuiltInRegistries.FLUID.getId(it).toString()}
         }
-        put("fluid_ticks", NbtList().apply { addAll(fluidTickSchedulers) })
+        put("fluid_ticks", ListTag().apply { addAll(fluidTickSchedulers) })
     }
 
-    private fun NbtCompound.genPostProcessing(chunk: WorldChunk) {
-        put("PostProcessing", SerializedChunk.toNbt(chunk.postProcessingLists))
+    private fun CompoundTag.genPostProcessing(chunk: LevelChunk) {
+        put("PostProcessing", SerializableChunkData.packOffsets(chunk.postProcessingLists))
 
-        put(SerializedChunk.HEIGHTMAPS_KEY, NbtCompound().apply {
+        put(SerializableChunkData.HEIGHTMAPS_TAG, CompoundTag().apply {
             chunk.heightmaps.filter {
                 chunk.status.heightmapTypes.contains(it.key)
             }.forEach { (key, value) ->
-                put(key.getName(), NbtLongArray(value.asLongArray()))
+                put(key.getName(), LongArrayTag(value.asLongArray()))
             }
         })
     }

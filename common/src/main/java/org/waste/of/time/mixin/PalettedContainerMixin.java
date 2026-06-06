@@ -1,6 +1,6 @@
 package org.waste.of.time.mixin;
 
-import net.minecraft.world.chunk.PalettedContainer;
+import net.minecraft.world.level.chunk.PalettedContainer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,12 +13,12 @@ public class PalettedContainerMixin implements IPalettedContainerExtension {
     @Unique
     private boolean ignoreLock = false;
 
-    @Inject(method = "lock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "acquire", at = @At("HEAD"), cancellable = true)
     public void disableChunkContainerLock(CallbackInfo ci) {
         if (ignoreLock) ci.cancel();
     }
 
-    @Inject(method = "unlock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "release", at = @At("HEAD"), cancellable = true)
     public void disableChunkContainerUnLock(CallbackInfo ci) {
         if (ignoreLock) ci.cancel();
     }

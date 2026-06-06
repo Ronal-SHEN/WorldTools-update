@@ -1,12 +1,12 @@
 package org.waste.of.time.storage.serializable
+import net.minecraft.nbt.*
 
 import net.minecraft.SharedConstants
-import net.minecraft.nbt.*
-import net.minecraft.text.MutableText
-import net.minecraft.util.Util
-import net.minecraft.util.WorldSavePath
-import net.minecraft.world.GameRules
-import net.minecraft.world.level.storage.LevelStorage.Session
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.Util
+import net.minecraft.world.level.storage.LevelResource
+import net.minecraft.world.level.GameRules
+import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils.toByte
 import org.waste.of.time.WorldTools.DAT_EXTENSION
 import org.waste.of.time.WorldTools.LOG
@@ -25,37 +25,37 @@ import java.io.IOException
 class LevelDataStoreable : Storeable() {
     override fun shouldStore() = config.general.capture.levelData
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.levelData",
             currentLevelName,
             "level${DAT_EXTENSION}"
         )
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = verboseInfo
 
     /**
      * See [net.minecraft.world.level.storage.LevelStorage.Session.backupLevelDataFile]
      */
     override fun store(
-        session: Session,
+        session: LevelStorageAccess,
         cachedStorages: MutableMap<String, CustomRegionBasedStorage>
     ) {
-        val resultingFile = session.getDirectory(WorldSavePath.ROOT).toFile()
+        val resultingFile = session.getLevelPath(LevelResource.ROOT).toFile()
         val dataNbt = serializeLevelData()
         // if we save an empty level.dat, clients will crash when opening the SP worlds screen
         if (dataNbt.isEmpty) throw RuntimeException("Failed to serialize level data")
-        val levelNbt = NbtCompound().apply {
+        val levelNbt = CompoundTag().apply {
             put("Data", dataNbt)
         }
 
         try {
             val newFile = File.createTempFile("level", DAT_EXTENSION, resultingFile).toPath()
             NbtIo.writeCompressed(levelNbt, newFile)
-            val backup = session.getDirectory(WorldSavePath.LEVEL_DAT_OLD)
-            val current = session.getDirectory(WorldSavePath.LEVEL_DAT)
-            Util.backupAndReplace(current, newFile, backup)
+            val backup = session.getLevelPath(LevelResource.OLD_LEVEL_DATA_FILE)
+            val current = session.getLevelPath(LevelResource.LEVEL_DATA_FILE)
+            Util.safeReplaceFile(current, newFile, backup)
             LOG.info("Saved level data.")
         } catch (exception: IOException) {
             MessageManager.sendError(
@@ -69,12 +69,12 @@ class LevelDataStoreable : Storeable() {
     /**
      * See [net.minecraft.world.level.LevelProperties.updateProperties]
      */
-    private fun serializeLevelData() = NbtCompound().apply {
+    private fun serializeLevelData() = CompoundTag().apply {
         val player = CaptureManager.lastPlayer ?: mc.player ?: return@apply
 
-        mc.networkHandler?.brand?.let {
-            put("ServerBrands", NbtList().apply {
-                add(NbtString.of(it))
+        mc.connection?.brand?.let {
+            put("ServerBrands", ListTag().apply {
+                add(StringTag.of(it))
             })
         }
 
@@ -82,26 +82,26 @@ class LevelDataStoreable : Storeable() {
 
         // skip removed features
 
-        put("Version", NbtCompound().apply {
-            putString("Name", SharedConstants.getGameVersion().name)
-            putInt("Id", SharedConstants.getGameVersion().saveVersion.id)
-            putBoolean("Snapshot", !SharedConstants.getGameVersion().isStable)
-            putString("Series", SharedConstants.getGameVersion().saveVersion.series)
+        put("Version", CompoundTag().apply {
+            putString("Name", SharedConstants.getCurrentVersion().name)
+            putInt("Id", SharedConstants.getCurrentVersion().saveVersion.id)
+            putBoolean("Snapshot", !SharedConstants.getCurrentVersion().isStable)
+            putString("Series", SharedConstants.getCurrentVersion().saveVersion.series)
         })
 
-        NbtHelper.putDataVersion(this)
+        NbtUtils.putDataVersion(this)
 
         put("WorldGenSettings", generatorMockNbt())
-        mc.networkHandler?.listedPlayerListEntries?.find {
+        mc.connection?.listedPlayerListEntries?.find {
             it.profile.id == player.uuid
         }?.let {
             putInt("GameType", it.gameMode.id)
         } ?: putInt("GameType", player.server?.defaultGameMode?.id ?: 0)
 
-        putInt("SpawnX", player.world.levelProperties.spawnPos.x)
-        putInt("SpawnY", player.world.levelProperties.spawnPos.y)
-        putInt("SpawnZ", player.world.levelProperties.spawnPos.z)
-        putFloat("SpawnAngle", player.world.levelProperties.spawnAngle)
+        putInt("SpawnX", player.world.levelData.spawnPos.x)
+        putInt("SpawnY", player.world.levelData.spawnPos.y)
+        putInt("SpawnZ", player.world.levelData.spawnPos.z)
+        putFloat("SpawnAngle", player.world.levelData.spawnAngle)
         putLong("Time", player.world.time)
         putLong("DayTime", player.world.timeOfDay)
         putLong("LastPlayed", System.currentTimeMillis())
@@ -118,21 +118,21 @@ class LevelDataStoreable : Storeable() {
 
         player.world.worldBorder.write().writeNbt(this)
 
-        putByte("Difficulty", player.world.levelProperties.difficulty.id.toByte())
+        putByte("Difficulty", player.world.levelData.difficulty.id.toByte())
         putBoolean("DifficultyLocked", false) // not sure
 
         // ToDo: Seems that the client side game rules were removed. Now only works for single player :/
-        val rules = player.world?.server?.gameRules?.genGameRules() ?: NbtCompound()
+        val rules = player.world?.server?.gameRules?.genGameRules() ?: CompoundTag()
         put("GameRules", rules)
-        put("Player", NbtCompound().apply {
+        put("Player", CompoundTag().apply {
             player.writeNbt(this)
             remove("LastDeathLocation") // can contain sensitive information
             putString("Dimension", "minecraft:${player.world.registryKey.value.path}")
         })
 
-        put("DragonFight", NbtCompound()) // not sure
-        put("CustomBossEvents", NbtCompound()) // not sure
-        put("ScheduledEvents", NbtList()) // not sure
+        put("DragonFight", CompoundTag()) // not sure
+        put("CustomBossEvents", CompoundTag()) // not sure
+        put("ScheduledEvents", ListTag()) // not sure
         putInt("WanderingTraderSpawnDelay", 0) // not sure
         putInt("WanderingTraderSpawnChance", 0) // not sure
 
@@ -143,26 +143,26 @@ class LevelDataStoreable : Storeable() {
         val setting = config.world.gameRules
         if (!setting.modifyGameRules) return@apply
 
-        putString(GameRules.DO_WARDEN_SPAWNING.name, setting.doWardenSpawning.toString())
-        putString(GameRules.DO_FIRE_TICK.name, setting.doFireTick.toString())
-        putString(GameRules.DO_VINES_SPREAD.name, setting.doVinesSpread.toString())
-        putString(GameRules.DO_MOB_SPAWNING.name, setting.doMobSpawning.toString())
-        putString(GameRules.DO_DAYLIGHT_CYCLE.name, setting.doDaylightCycle.toString())
-        putString(GameRules.KEEP_INVENTORY.name, setting.keepInventory.toString())
-        putString(GameRules.DO_MOB_GRIEFING.name, setting.doMobGriefing.toString())
-        putString(GameRules.DO_TRADER_SPAWNING.name, setting.doTraderSpawning.toString())
-        putString(GameRules.DO_PATROL_SPAWNING.name, setting.doPatrolSpawning.toString())
-        putString(GameRules.DO_WEATHER_CYCLE.name, setting.doWeatherCycle.toString())
+        putString(GameRules.RULE_DO_WARDEN_SPAWNING.name, setting.doWardenSpawning.toString())
+        putString(GameRules.RULE_DOFIRETICK.name, setting.doFireTick.toString())
+        putString(GameRules.RULE_DO_VINES_SPREAD.name, setting.doVinesSpread.toString())
+        putString(GameRules.RULE_DOMOBSPAWNING.name, setting.doMobSpawning.toString())
+        putString(GameRules.RULE_DAYLIGHT.name, setting.doDaylightCycle.toString())
+        putString(GameRules.RULE_KEEPINVENTORY.name, setting.keepInventory.toString())
+        putString(GameRules.RULE_MOBGRIEFING.name, setting.doMobGriefing.toString())
+        putString(GameRules.RULE_DO_TRADER_SPAWNING.name, setting.doTraderSpawning.toString())
+        putString(GameRules.RULE_DO_PATROL_SPAWNING.name, setting.doPatrolSpawning.toString())
+        putString(GameRules.RULE_WEATHER_CYCLE.name, setting.doWeatherCycle.toString())
     }
 
-    private fun generatorMockNbt() = NbtCompound().apply {
+    private fun generatorMockNbt() = CompoundTag().apply {
         putByte("bonus_chest", config.world.worldGenerator.bonusChest.toByte())
         putLong("seed", config.world.worldGenerator.seed)
         putByte("generate_features", config.world.worldGenerator.generateFeatures.toByte())
 
-        put("dimensions", NbtCompound().apply {
+        put("dimensions", CompoundTag().apply {
             CaptureManager.lastWorldKeys.forEach { key ->
-                put("minecraft:${key.value.path}", NbtCompound().apply {
+                put("minecraft:${key.value.path}", CompoundTag().apply {
                     put("generator", generateGenerator(key.value.path))
 
                     when (key.value.path) {
@@ -181,7 +181,7 @@ class LevelDataStoreable : Storeable() {
         })
     }
 
-    private fun generateGenerator(path: String) = NbtCompound().apply {
+    private fun generateGenerator(path: String) = CompoundTag().apply {
         when (config.world.worldGenerator.type) {
             GeneratorType.VOID -> voidGenerator()
             GeneratorType.DEFAULT -> defaultGenerator(path)
@@ -189,26 +189,26 @@ class LevelDataStoreable : Storeable() {
         }
     }
 
-    private fun NbtCompound.voidGenerator() {
-        put("settings", NbtCompound().apply {
+    private fun CompoundTag.voidGenerator() {
+        put("settings", CompoundTag().apply {
             putByte("features", 1)
             putString("biome", "minecraft:the_void")
-            put("layers", NbtList().apply {
-                add(NbtCompound().apply {
+            put("layers", ListTag().apply {
+                add(CompoundTag().apply {
                     putString("block", "minecraft:air")
                     putInt("height", 1)
                 })
             })
-            put("structure_overrides", NbtList())
+            put("structure_overrides", ListTag())
             putByte("lakes", 0)
         })
         putString("type", "minecraft:flat")
     }
 
-    private fun NbtCompound.defaultGenerator(path: String) {
+    private fun CompoundTag.defaultGenerator(path: String) {
         when (path) {
             "the_nether" -> {
-                put("biome_source", NbtCompound().apply {
+                put("biome_source", CompoundTag().apply {
                     putString("preset", "minecraft:nether")
                     putString("type", "minecraft:multi_noise")
                 })
@@ -216,14 +216,14 @@ class LevelDataStoreable : Storeable() {
                 putString("type", "minecraft:noise")
             }
             "the_end" -> {
-                put("biome_source", NbtCompound().apply {
+                put("biome_source", CompoundTag().apply {
                     putString("type", "minecraft:the_end")
                 })
                 putString("settings", "minecraft:end")
                 putString("type", "minecraft:noise")
             }
             else -> {
-                put("biome_source", NbtCompound().apply {
+                put("biome_source", CompoundTag().apply {
                     putString("preset", "minecraft:overworld")
                     putString("type", "minecraft:multi_noise")
                 })
@@ -233,28 +233,28 @@ class LevelDataStoreable : Storeable() {
         }
     }
 
-    private fun NbtCompound.flatGenerator() {
-        put("settings", NbtCompound().apply {
+    private fun CompoundTag.flatGenerator() {
+        put("settings", CompoundTag().apply {
             putString("biome", "minecraft:plains")
             putByte("features", 0)
             putByte("lakes", 0)
-            put("layers", NbtList().apply {
-                add(NbtCompound().apply {
+            put("layers", ListTag().apply {
+                add(CompoundTag().apply {
                     putString("block", "minecraft:bedrock")
                     putInt("height", 1)
                 })
-                add(NbtCompound().apply {
+                add(CompoundTag().apply {
                     putString("block", "minecraft:dirt")
                     putInt("height", 2)
                 })
-                add(NbtCompound().apply {
+                add(CompoundTag().apply {
                     putString("block", "minecraft:grass_block")
                     putInt("height", 1)
                 })
             })
-            put("structure_overrides", NbtList().apply {
-                add(NbtString.of("minecraft:strongholds"))
-                add(NbtString.of("minecraft:villages"))
+            put("structure_overrides", ListTag().apply {
+                add(StringTag.of("minecraft:strongholds"))
+                add(StringTag.of("minecraft:villages"))
             })
         })
         putString("type", "minecraft:flat")

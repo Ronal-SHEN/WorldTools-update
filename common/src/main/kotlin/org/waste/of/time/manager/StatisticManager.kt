@@ -1,8 +1,8 @@
 package org.waste.of.time.manager
 
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.TextColor
 import org.waste.of.time.manager.CaptureManager.currentLevelName
 import org.waste.of.time.manager.MessageManager.translateHighlight
 import org.waste.of.time.WorldTools.config
@@ -23,9 +23,9 @@ object StatisticManager {
         dimensions.clear()
     }
 
-    val infoMessage: Text
+    val infoMessage: Component
         get() {
-            val savedElements = mutableListOf<Text>().apply {
+            val savedElements = mutableListOf<Component>().apply {
                 if (chunks == 1) {
                     add(translateHighlight("worldtools.capture.chunk", chunks))
                 }
@@ -59,30 +59,30 @@ object StatisticManager {
                 translateHighlight("worldtools.capture.nothing_saved_yet", currentLevelName)
             } else {
                 val dimensionsFormatted = dimensions.map {
-                    Text.literal(it).styled { text ->
-                        text.withColor(TextColor.fromRgb(config.render.accentColor))
+                    Component.literal(it).withStyle { text ->
+                        text.setColor(TextColor.fromRgb(config.render.accentColor))
                     }
                 }.joinWithAnd()
-                Text.translatable("worldtools.capture.saved").copy()
+                Component.translatable("worldtools.capture.saved").copy()
                     .append(savedElements.joinWithAnd())
-                    .append(Text.translatable("worldtools.capture.in_dimension"))
+                    .append(Component.translatable("worldtools.capture.in_dimension"))
                     .append(dimensionsFormatted)
             }
         }
 
-    fun List<Text>.joinWithAnd(): Text {
-        val and = Text.translatable("worldtools.capture.and")
+    fun List<Component>.joinWithAnd(): Component {
+        val and = Component.translatable("worldtools.capture.and")
         return when (size) {
-            0 -> Text.of("")
+            0 -> Component.of("")
             1 -> this[0]
             2 -> this[0].copy().append(and).append(this[1])
             else -> dropLast(1).join().append(and).append(last())
         }
     }
 
-    private fun List<Text>.join(): MutableText {
-        val comma = Text.of(", ")
-        return foldIndexed(Text.literal("")) { index, acc, text ->
+    private fun List<Component>.join(): MutableComponent {
+        val comma = Component.of(", ")
+        return foldIndexed(Component.literal("")) { index, acc, text ->
             if (index == 0) return@foldIndexed text.copy()
             acc.append(comma).append(text)
         }

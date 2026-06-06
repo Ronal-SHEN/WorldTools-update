@@ -5,7 +5,7 @@ import com.terraformersmc.modmenu.api.ModMenuApi
 import me.shedaniel.autoconfig.AutoConfig
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screens.Screen
 import org.waste.of.time.config.WorldToolsConfig
 
 @Environment(EnvType.CLIENT)

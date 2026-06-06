@@ -1,10 +1,10 @@
 package org.waste.of.time.storage.serializable
 
-import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.text.MutableText
+import net.minecraft.client.multiplayer.PlayerInfo
+import net.minecraft.network.chat.MutableComponent
 import net.minecraft.util.PathUtil
-import net.minecraft.util.WorldSavePath
-import net.minecraft.world.level.storage.LevelStorage.Session
+import net.minecraft.world.level.storage.LevelResource
+import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils
 import org.waste.of.time.WorldTools.CREDIT_MESSAGE_MD
 import org.waste.of.time.WorldTools.LOG
@@ -26,19 +26,19 @@ import kotlin.io.path.writeBytes
 class MetadataStoreable : Storeable() {
     override fun shouldStore() = config.general.capture.metadata
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.metadata",
             currentLevelName
         )
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = verboseInfo
 
-    override fun store(session: Session, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
+    override fun store(session: LevelStorageAccess, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
         session.writeIconFile()
 
-        session.getDirectory(WorldSavePath.ROOT).resolve(MOD_NAME).apply {
+        session.getLevelPath(LevelResource.ROOT).resolve(MOD_NAME).apply {
             PathUtil.createDirectories(this)
 
             writePlayerEntryList()
@@ -58,7 +58,7 @@ class MetadataStoreable : Storeable() {
     private fun Path.writePlayerEntryList() {
         if (mc.isInSingleplayer) return
 
-        mc.networkHandler?.playerList?.let { playerList ->
+        mc.connection?.playerList?.let { playerList ->
             if (playerList.isEmpty()) return@let
             resolve("Player Entry List.csv").toFile()
                 .writeText(createPlayerEntryList(playerList.toList()))
@@ -67,7 +67,7 @@ class MetadataStoreable : Storeable() {
     }
 
     private fun Path.writeDimensionTree() {
-        mc.networkHandler?.worldKeys?.let { keys ->
+        mc.connection?.worldKeys?.let { keys ->
             if (keys.isEmpty()) return@let
             resolve("Dimension Tree.txt").toFile()
                 .writeText(PathTreeNode.buildTree(keys.map { it.value.path }))
@@ -75,8 +75,8 @@ class MetadataStoreable : Storeable() {
         }
     }
 
-    private fun Session.writeIconFile() {
-        mc.networkHandler?.serverInfo?.favicon?.let { favicon ->
+    private fun LevelStorageAccess.writeIconFile() {
+        mc.connection?.serverInfo?.favicon?.let { favicon ->
             iconFile.ifPresent {
                 it.writeBytes(favicon)
             }
@@ -107,7 +107,7 @@ class MetadataStoreable : Storeable() {
 
         appendLine()
 
-        mc.networkHandler?.serverInfo?.let { info ->
+        mc.connection?.serverInfo?.let { info ->
             appendLine("## Server")
             if (info.name != "Minecraft Server") {
                 appendLine("- **List Entry Name**: `${info.name}`")
@@ -116,7 +116,7 @@ class MetadataStoreable : Storeable() {
             if (info.playerCountLabel.string.isNotBlank()) {
                 appendLine("- **Capacity**: `${info.playerCountLabel.string}`")
             }
-            mc.networkHandler?.let {
+            mc.connection?.let {
                 appendLine("- **Brand**: `${it.brand}`")
             }
             appendLine("- **MOTD**: `${info.label.string.split("\n").joinToString(" ")}`")
@@ -135,7 +135,7 @@ class MetadataStoreable : Storeable() {
 
             appendLine()
             appendLine("## Connection")
-            (mc.networkHandler?.connection?.address as? InetSocketAddress)?.let {
+            (mc.connection?.connection?.address as? InetSocketAddress)?.let {
                 appendLine("- **Host Name**: `${it.address.canonicalHostName}`")
                 appendLine("- **Port**: `${it.port}`")
             }
@@ -145,32 +145,32 @@ class MetadataStoreable : Storeable() {
             appendLine("- **Version**: `${mc.server?.version}`")
         }
 
-        mc.networkHandler?.sessionId?.let { id ->
-            appendLine("- **Session ID**: `$id`")
+        mc.connection?.sessionId?.let { id ->
+            appendLine("- **LevelStorageAccess ID**: `$id`")
         }
 
         appendLine()
         appendLine(CREDIT_MESSAGE_MD)
     }.toString()
 
-    private fun createPlayerEntryList(listEntries: List<PlayerListEntry>) = StringBuilder().apply {
-        appendLine("Name, ID, Game Mode, Latency, Scoreboard Team, Model Type, Session ID, Public Key")
+    private fun createPlayerEntryList(listEntries: List<PlayerInfo>) = StringBuilder().apply {
+        appendLine("Name, ID, Game Mode, Latency, Scoreboard Team, Model Type, LevelStorageAccess ID, Public Key")
 
         listEntries.forEachIndexed { i, entry ->
             StorageFlow.lastStoredTimestamp = System.currentTimeMillis()
-            BarManager.progressBar.percent = i.toFloat() / listEntries.size
+            BarManager.progressBar.progress = i.toFloat() / listEntries.size
             serializePlayerListEntry(entry)
         }
     }.toString()
 
-    private fun StringBuilder.serializePlayerListEntry(entry: PlayerListEntry) {
+    private fun StringBuilder.serializePlayerListEntry(entry: PlayerInfo) {
         append("${entry.profile.name}, ")
         append("${entry.profile.id}, ")
         append("${entry.gameMode.name}, ")
         append("${entry.latency}, ")
         append("${entry.scoreboardTeam?.name}, ")
         appendLine(entry.skinTextures.model)
-        entry.session?.let {
+        entry.chatSession?.let {
             append("${it.sessionId}, ")
             append("${it.publicKeyData?.data}, ")
         }

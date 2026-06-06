@@ -1,10 +1,10 @@
 package org.waste.of.time.storage.serializable
 
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.util.WorldSavePath
-import net.minecraft.world.level.storage.LevelStorage
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Component
+import net.minecraft.world.level.storage.LevelResource
+import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.manager.CaptureManager.currentLevelName
 import org.waste.of.time.manager.MessageManager.infoToast
 import org.waste.of.time.manager.MessageManager.sendInfo
@@ -16,31 +16,31 @@ import org.waste.of.time.storage.Storeable
 class EndFlow : Storeable() {
     override fun shouldStore() = true
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.end_flow",
             currentLevelName
         )
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = verboseInfo
 
     override fun store(
-        session: LevelStorage.Session,
+        session: LevelStorageSource.LevelStorageAccess,
         cachedStorages: MutableMap<String, CustomRegionBasedStorage>
     ) {
         StatisticManager.infoMessage.apply {
             infoToast()
 
-            val directory = Text.translatable("worldtools.capture.to_directory")
+            val directory = Component.translatable("worldtools.capture.to_directory")
             val clickToOpen = translateHighlight(
                 "worldtools.capture.click_to_open",
                 currentLevelName
-            ).copy().styled {
+            ).copy().withStyle {
                 it.withClickEvent(
                     ClickEvent(
                         ClickEvent.Action.OPEN_FILE,
-                        session.getDirectory(WorldSavePath.ROOT).toFile().path
+                        session.getLevelPath(LevelResource.ROOT).toFile().path
                     )
                 )
             }

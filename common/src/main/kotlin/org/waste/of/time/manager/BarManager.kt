@@ -1,8 +1,8 @@
 package org.waste.of.time.manager
 
 
-import net.minecraft.client.gui.hud.ClientBossBar
-import net.minecraft.text.Text
+import net.minecraft.client.gui.components.LerpingBossEvent
+import net.minecraft.network.chat.Component
 import org.waste.of.time.manager.CaptureManager.capturing
 import org.waste.of.time.WorldTools.config
 import org.waste.of.time.manager.MessageManager.info
@@ -12,9 +12,9 @@ import java.util.*
 object BarManager {
 
     val progressBar =
-        ClientBossBar(
+        LerpingBossEvent(
             UUID.randomUUID(),
-            Text.of(""),
+            Component.of(""),
             0f,
             config.render.progressBarColor,
             config.render.progressBarStyle,
@@ -24,9 +24,9 @@ object BarManager {
         )
 
     private val captureInfoBar =
-        ClientBossBar(
+        LerpingBossEvent(
             UUID.randomUUID(),
-            Text.of(""),
+            Component.of(""),
             1.0f,
             config.render.captureBarColor,
             config.render.captureBarStyle,
@@ -52,19 +52,19 @@ object BarManager {
         captureInfoBar.color = config.render.captureBarColor
         captureInfoBar.style = config.render.captureBarStyle
         progressBar.color = config.render.progressBarColor
-        progressBar.percent = 0f
+        progressBar.progress = 0f
 
         StorageFlow.lastStored?.let {
             val elapsed = System.currentTimeMillis() - StorageFlow.lastStoredTimestamp
             val timeout = config.render.progressBarTimeout
             val progress = (elapsed.toFloat() / timeout).coerceAtMost(1f)
 
-            progressBar.percent = progress
+            progressBar.progress = progress
             progressBar.name = it.formattedInfo
 
             if (elapsed >= timeout) {
                 StorageFlow.lastStored = null
-                progressBar.percent = 0f
+                progressBar.progress = 0f
             }
         }
     }

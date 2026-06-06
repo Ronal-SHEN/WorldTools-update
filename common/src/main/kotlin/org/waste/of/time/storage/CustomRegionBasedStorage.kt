@@ -1,18 +1,18 @@
 package org.waste.of.time.storage
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtIo
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.util.PathUtil
-import net.minecraft.util.ThrowableDeliverer
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.world.World
-import net.minecraft.world.storage.RegionFile
-import net.minecraft.world.storage.StorageKey
+import net.minecraft.util.ExceptionCollector
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.chunk.storage.RegionFile
+import net.minecraft.world.level.chunk.storage.RegionStorageInfo
 import org.waste.of.time.WorldTools.MCA_EXTENSION
 import org.waste.of.time.WorldTools.MOD_NAME
 import org.waste.of.time.WorldTools.mc
@@ -30,12 +30,12 @@ open class CustomRegionBasedStorage internal constructor(
     companion object {
         // Seems to only be used for MC's profiler
         // simpler to just use a default key instead of wiring this all in here
-        val defaultStorageKey: StorageKey = StorageKey(MOD_NAME, World.OVERWORLD, "chunk")
+        val defaultStorageKey: RegionStorageInfo = RegionStorageInfo(MOD_NAME, Level.OVERWORLD, "chunk")
     }
 
     @Throws(IOException::class)
     fun getRegionFile(pos: ChunkPos): RegionFile {
-        val longPos = ChunkPos.toLong(pos.regionX, pos.regionZ)
+        val longPos = ChunkPos.asLong(pos.regionX, pos.regionZ)
         cachedRegionFiles.getAndMoveToFirst(longPos)?.let { return it }
 
         if (cachedRegionFiles.size >= 256) {
@@ -50,45 +50,45 @@ open class CustomRegionBasedStorage internal constructor(
     }
 
     @Throws(IOException::class)
-    fun write(pos: ChunkPos, nbt: NbtCompound?) {
+    fun write(pos: ChunkPos, nbt: CompoundTag?) {
         val regionFile = getRegionFile(pos)
         if (nbt == null) {
             regionFile.delete(pos)
         } else {
-            regionFile.getChunkOutputStream(pos).use { dataOutputStream ->
+            regionFile.getChunkDataOutputStream(pos).use { dataOutputStream ->
                 NbtIo.write(nbt, dataOutputStream as DataOutput)
             }
         }
     }
 
     private fun getNbtAt(chunkPos: ChunkPos) =
-        getRegionFile(chunkPos).getChunkInputStream(chunkPos)?.use { dataInputStream ->
-            NbtIo.readCompound(dataInputStream)
+        getRegionFile(chunkPos).getChunkDataInputStream(chunkPos)?.use { dataInputStream ->
+            NbtIo.read(dataInputStream)
         }
 
     fun getBlockEntities(chunkPos: ChunkPos): List<BlockEntity> =
         getNbtAt(chunkPos)
             ?.getList("block_entities", 10)
-            ?.filterIsInstance<NbtCompound>()
+            ?.filterIsInstance<CompoundTag>()
             ?.mapNotNull { compoundTag ->
-                val blockPos = BlockPos(compoundTag.getInt("x"), compoundTag.getInt("y"), compoundTag.getInt("z"))
-                val blockStateIdentifier = Identifier.of(compoundTag.getString("id"))
+                val blockPos = BlockPos(compoundTag.getIntOr("x"), compoundTag.getIntOr("y"), compoundTag.getIntOr("z"))
+                val blockStateIdentifier = ResourceLocation.of(compoundTag.getString("id"))
                 val world = mc.world ?: return@mapNotNull null
 
                 runCatching {
-                    val block = Registries.BLOCK.get(blockStateIdentifier)
-                    Registries.BLOCK_ENTITY_TYPE
+                    val block = BuiltInRegistries.BLOCK.get(blockStateIdentifier)
+                    BuiltInRegistries.BLOCK_ENTITY_TYPE
                         .getOptionalValue(blockStateIdentifier)
                         .orElse(null)
                         ?.instantiate(blockPos, block.defaultState)?.apply {
-                            read(compoundTag, world.registryManager)
+                            read(compoundTag, world.registryAccess)
                         }
                 }.getOrNull()
             } ?: emptyList()
 
     @Throws(IOException::class)
     override fun close() {
-        val throwableDeliverer = ThrowableDeliverer<IOException>()
+        val throwableDeliverer = ExceptionCollector<IOException>()
 
         cachedRegionFiles.values.filterNotNull().forEach { regionFile ->
             try {
@@ -98,6 +98,6 @@ open class CustomRegionBasedStorage internal constructor(
             }
         }
 
-        throwableDeliverer.deliver()
+        throwableDeliverer.throwIfPresent()
     }
 }

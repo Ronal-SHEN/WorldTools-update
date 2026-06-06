@@ -1,10 +1,10 @@
 package org.waste.of.time.manager
 
-import net.minecraft.client.toast.SystemToast
-import net.minecraft.client.toast.Toast
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
+import net.minecraft.client.gui.components.toasts.SystemToast
+import net.minecraft.client.gui.components.toasts.Toast
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.TextColor
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.config
 import org.waste.of.time.WorldTools.mc
@@ -12,34 +12,34 @@ import org.waste.of.time.WorldTools.mc
 object MessageManager {
     private const val ERROR_COLOR = 0xff3333
 
-    val brand: Text = Text.empty()
+    val brand: Component = Component.empty()
         .append(
-            Text.literal("W").styled {
+            Component.literal("W").withStyle {
                 it.withColor(TextColor.fromRgb(config.render.accentColor))
             }
         ).append(
-            Text.literal("orld")
+            Component.literal("orld")
         ).append(
-            Text.literal("T").styled {
+            Component.literal("T").withStyle {
                 it.withColor(TextColor.fromRgb(config.render.accentColor))
             }
         ).append(
-            Text.literal("ools")
+            Component.literal("ools")
         )
     private val converted by lazy {
-        Text.literal("[").append(brand).append(Text.of("] "))
+        Component.literal("[").append(brand).append(Component.of("] "))
     }
-    private val fullBrand: MutableText
+    private val fullBrand: MutableComponent
         get() = converted.copy()
 
     fun String.info() =
-        Text.of(this).sendInfo()
+        Component.of(this).sendInfo()
 
     fun sendInfo(translateKey: String, vararg args: Any) = translateHighlight(translateKey, *args).sendInfo()
 
-    fun sendError(translateKey: String, vararg args: Any) = Text.translatable(translateKey, *args).sendError()
+    fun sendError(translateKey: String, vararg args: Any) = Component.translatable(translateKey, *args).sendError()
 
-    fun Text.infoToast() {
+    fun Component.infoToast() {
         SystemToast.create(
             mc,
             SystemToast.Type.WORLD_BACKUP,
@@ -48,7 +48,7 @@ object MessageManager {
         ).addToast()
     }
 
-    private fun Text.errorToast() {
+    private fun Component.errorToast() {
         SystemToast.create(
             mc,
             SystemToast.Type.WORLD_ACCESS_FAILURE,
@@ -57,12 +57,12 @@ object MessageManager {
         ).addToast()
     }
 
-    fun Text.sendInfo() =
+    fun Component.sendInfo() =
         fullBrand.append(this).addMessage()
 
-    private fun Text.sendError() {
+    private fun Component.sendError() {
         LOG.error(string)
-        val errorText = copy().styled {
+        val errorText = copy().withStyle {
             it.withColor(ERROR_COLOR)
         }
 
@@ -70,7 +70,7 @@ object MessageManager {
         errorText.errorToast()
     }
 
-    private fun Text.addMessage() {
+    private fun Component.addMessage() {
         if (!config.advanced.showChatMessages) return
 
         mc.execute {
@@ -86,23 +86,23 @@ object MessageManager {
         }
     }
 
-    fun translateHighlight(key: String, vararg args: Any): MutableText =
+    fun translateHighlight(key: String, vararg args: Any): MutableComponent =
         args.map { element ->
             val secondaryColor = TextColor.fromRgb(config.render.accentColor)
-            if (element is Text) {
+            if (element is Component) {
                 if (element.style.color != null) {
                     element
                 } else {
-                    element.copy().styled { style ->
-                        style.withColor(secondaryColor)
+                    element.copy().withStyle { style ->
+                        style.setColor(secondaryColor)
                     }
                 }
             } else {
-                Text.literal(element.toString()).styled { style ->
-                    style.withColor(secondaryColor)
+                Component.literal(element.toString()).withStyle { style ->
+                    style.setColor(secondaryColor)
                 }
             }
         }.toTypedArray().let {
-            Text.translatable(key, *it)
+            Component.translatable(key, *it)
         }
 }

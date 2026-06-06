@@ -1,8 +1,8 @@
 package org.waste.of.time.storage.cache
 
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityType
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
+import net.minecraft.nbt.CompoundTag
 import org.waste.of.time.Utils.toByte
 import org.waste.of.time.WorldTools.TIMESTAMP_KEY
 import org.waste.of.time.WorldTools.config
@@ -11,10 +11,10 @@ import org.waste.of.time.storage.Cacheable
 data class EntityCacheable(
     val entity: Entity
 ) : Cacheable {
-    fun compound() = NbtCompound().apply {
+    fun compound() = CompoundTag().apply {
         // saveSelfNbt has a check for RemovalReason.DISCARDED
-        EntityType.getId(entity.type)?.let { putString(Entity.ID_KEY, it.toString()) }
-        entity.writeNbt(this)
+        EntityType.getKey(entity.type)?.let { putString(Entity.ID_TAG, it.toString()) }
+        entity.saveWithoutId(this)
 
         if (config.entity.behavior.modifyEntityBehavior) {
             putByte("NoAI", config.entity.behavior.noAI.toByte())
@@ -29,7 +29,7 @@ data class EntityCacheable(
     }
 
     override fun cache() {
-        HotCache.entities.computeIfAbsent(entity.chunkPos) { mutableSetOf() }.apply {
+        HotCache.entities.computeIfAbsent(entity.chunkPosition) { mutableSetOf() }.apply {
             // Remove the entity if it already exists to update it
             removeIf { it.entity.uuid == entity.uuid }
             add(this@EntityCacheable)
@@ -37,7 +37,7 @@ data class EntityCacheable(
     }
 
     override fun flush() {
-        val chunkPos = entity.chunkPos
+        val chunkPos = entity.chunkPosition
         HotCache.entities[chunkPos]?.let { list ->
             list.remove(this)
             if (list.isEmpty()) {

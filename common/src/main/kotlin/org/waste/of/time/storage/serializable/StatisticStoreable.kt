@@ -1,11 +1,11 @@
 package org.waste.of.time.storage.serializable
 
 import com.google.gson.JsonObject
-import net.minecraft.registry.Registries
-import net.minecraft.text.MutableText
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.MutableComponent
 import net.minecraft.util.PathUtil
-import net.minecraft.util.WorldSavePath
-import net.minecraft.world.level.storage.LevelStorage
+import net.minecraft.world.level.storage.LevelResource
+import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.manager.MessageManager.translateHighlight
 import org.waste.of.time.WorldTools
 import org.waste.of.time.WorldTools.CURRENT_VERSION
@@ -20,21 +20,21 @@ import java.nio.file.Files
 class StatisticStoreable : Storeable() {
     override fun shouldStore() = config.general.capture.statistics
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.statistics",
             mc.player?.name ?: "Unknown"
         )
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = verboseInfo
 
-    override fun store(session: LevelStorage.Session, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
+    override fun store(session: LevelStorageSource.LevelStorageAccess, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
         // we need to get the stat map from the player's stat handler instead of the packet because the packet only
         // contains the stats that have changed since the last time the packet was sent
         val completeStatMap = mc.player?.statHandler?.statMap?.toMap() ?: return
         val uuid = mc.player?.uuid ?: return
-        val statDirectory = session.getDirectory(WorldSavePath.STATS)
+        val statDirectory = session.getLevelPath(LevelResource.PLAYER_STATS_DIR)
 
         val json = JsonObject().apply {
             addProperty("Author", WorldTools.CREDIT_MESSAGE)
@@ -46,7 +46,7 @@ class StatisticStoreable : Storeable() {
                             typeObject.addProperty(it, value)
                         }
                     }
-                    add(Registries.STAT_TYPE.getId(type).toString(), typeObject)
+                    add(BuiltInRegistries.STAT_TYPE.getId(type).toString(), typeObject)
                 }
             })
             addProperty("DataVersion", CURRENT_VERSION)

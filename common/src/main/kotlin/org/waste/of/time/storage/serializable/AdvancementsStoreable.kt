@@ -2,12 +2,12 @@ package org.waste.of.time.storage.serializable
 
 import com.google.gson.JsonElement
 import com.mojang.serialization.JsonOps
-import net.minecraft.advancement.PlayerAdvancementTracker
-import net.minecraft.datafixer.DataFixTypes
-import net.minecraft.text.MutableText
+import net.minecraft.server.PlayerAdvancements
+import net.minecraft.util.datafix.DataFixTypes
+import net.minecraft.network.chat.MutableComponent
 import net.minecraft.util.PathUtil
-import net.minecraft.util.WorldSavePath
-import net.minecraft.world.level.storage.LevelStorage
+import net.minecraft.world.level.storage.LevelResource
+import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.WorldTools.CURRENT_VERSION
 import org.waste.of.time.WorldTools.GSON
 import org.waste.of.time.WorldTools.LOG
@@ -22,27 +22,27 @@ import java.nio.file.Files
 class AdvancementsStoreable : Storeable() {
     override fun shouldStore() = config.general.capture.advancements
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.advancements",
             mc.player?.name ?: "Unknown"
         )
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = verboseInfo
 
     private val progressMapCodec =
-        DataFixTypes.ADVANCEMENTS.createDataFixingCodec(
-            PlayerAdvancementTracker.ProgressMap.CODEC, mc.dataFixer, CURRENT_VERSION
+        DataFixTypes.PLAYER_ADVANCEMENTS_DIR.wrapCodec(
+            PlayerAdvancements.ProgressMap.CODEC, mc.fixerUpper, CURRENT_VERSION
         )
 
     override fun store(
-        session: LevelStorage.Session,
+        session: LevelStorageSource.LevelStorageAccess,
         cachedStorages: MutableMap<String, CustomRegionBasedStorage>
     ) {
         val uuid = mc.player?.uuid ?: return
         val progress = mc.player
-            ?.networkHandler
+            ?.connection
             ?.advancementHandler
             ?.advancementProgresses ?: return
         val progressMap = progress.entries
@@ -53,11 +53,11 @@ class AdvancementsStoreable : Storeable() {
         val jsonElement =
             progressMapCodec.encodeStart(
                 JsonOps.INSTANCE,
-                PlayerAdvancementTracker.ProgressMap(progressMap)
+                PlayerAdvancements.ProgressMap(progressMap)
             ).getOrThrow() as JsonElement
 
 
-        val advancements = session.getDirectory(WorldSavePath.ADVANCEMENTS)
+        val advancements = session.getLevelPath(LevelResource.PLAYER_ADVANCEMENTS_DIR)
         PathUtil.createDirectories(advancements)
         Files.newBufferedWriter(
             advancements.resolve("$uuid.json"),

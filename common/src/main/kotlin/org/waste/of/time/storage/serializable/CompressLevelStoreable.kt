@@ -1,8 +1,8 @@
 package org.waste.of.time.storage.serializable
 
-import net.minecraft.text.MutableText
-import net.minecraft.util.WorldSavePath
-import net.minecraft.world.level.storage.LevelStorage
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.world.level.storage.LevelResource
+import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.Utils.toReadableByteCount
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.config
@@ -26,18 +26,18 @@ class CompressLevelStoreable : Storeable() {
 
     override fun shouldStore() = config.general.compressLevel
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight("worldtools.capture.saved.compressed", zipName)
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = verboseInfo
 
     override fun store(
-        session: LevelStorage.Session,
+        session: LevelStorageSource.LevelStorageAccess,
         cachedStorages: MutableMap<String, CustomRegionBasedStorage>
     ) {
-        val rootPath = session.getDirectory(WorldSavePath.ROOT)
-        val zipPath = mc.levelStorage.savesDirectory.resolve(zipName)
+        val rootPath = session.getLevelPath(LevelResource.ROOT)
+        val zipPath = mc.levelSource.baseDir.resolve(zipName)
         LOG.info("Zipping $rootPath to $zipPath")
 
         val totalSize = Files.walk(rootPath).filter { Files.isRegularFile(it) }.mapToLong { Files.size(it) }.sum()
@@ -54,7 +54,7 @@ class CompressLevelStoreable : Storeable() {
                             totalZippedSize += Files.size(file)
                             val progress = totalZippedSize.toDouble() / totalSize
                             StorageFlow.lastStoredTimestamp = System.currentTimeMillis()
-                            BarManager.progressBar.percent = progress.toFloat()
+                            BarManager.progressBar.progress = progress.toFloat()
                             if (config.debug.logZippingProgress) {
                                 LOG.info("${"%.2f".format(progress * 100)}% (${totalZippedSize.toReadableByteCount()}/${totalSize.toReadableByteCount()}) Zipping file ${file.name} with size ${Files.size(file).toReadableByteCount()}")
                             }

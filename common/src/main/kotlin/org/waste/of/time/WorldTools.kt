@@ -5,9 +5,9 @@ import com.google.gson.GsonBuilder
 import me.shedaniel.autoconfig.AutoConfig
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer
 import net.minecraft.SharedConstants
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
+import net.minecraft.client.Minecraft
+import net.minecraft.client.KeyMapping
+import com.mojang.blaze3d.platform.InputConstants
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.lwjgl.glfw.GLFW
@@ -27,16 +27,16 @@ object WorldTools {
     val CREDIT_MESSAGE = "This file was created by $MOD_NAME $VERSION ($URL)"
     val CREDIT_MESSAGE_MD = "This file was created by [$MOD_NAME $VERSION]($URL)"
     val LOG: Logger = LogManager.getLogger()
-    var CAPTURE_KEY = KeyBinding(
-        "$MOD_ID.key.toggle_capture", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F12,
+    var CAPTURE_KEY = KeyMapping(
+        "$MOD_ID.key.toggle_capture", InputConstants.Type.KEYSYM, GLFW.KEY_F12,
         "$MOD_ID.key.categories"
     )
-    var CONFIG_KEY = KeyBinding(
-        "$MOD_ID.key.open_config", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F10,
+    var CONFIG_KEY = KeyMapping(
+        "$MOD_ID.key.open_config", InputConstants.Type.KEYSYM, GLFW.KEY_F10,
         "$MOD_ID.key.categories"
     )
 
-    val mc: MinecraftClient = MinecraftClient.getInstance()
+    val mc: Minecraft = Minecraft.getInstance()
     lateinit var config: WorldToolsConfig; private set
 
     fun initialize() {

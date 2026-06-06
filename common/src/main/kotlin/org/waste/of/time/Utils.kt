@@ -1,8 +1,8 @@
 package org.waste.of.time
 
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.registry.Registries
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.phys.Vec3
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -14,7 +14,7 @@ import kotlin.math.pow
 object Utils {
     // Why cant I use the std lib?
     fun Boolean.toByte(): Byte = if (this) 1 else 0
-    fun Vec3d.asString() = "(%.2f, %.2f, %.2f)".format(x, y, z)
+    fun Vec3.asString() = "(%.2f, %.2f, %.2f)".format(x, y, z)
 
     fun getTime(): String {
         val localDateTime = LocalDateTime.now()
@@ -26,7 +26,7 @@ object Utils {
         return zonedDateTime.format(formatter)
     }
 
-    fun Vec3d.manhattanDistance2d(other: Vec3d) =
+    fun Vec3.manhattanDistance2d(other: Vec3) =
         abs(this.x - other.x) + abs(this.z - other.z)
 
     fun Long.toReadableByteCount(si: Boolean = true): String {
@@ -38,5 +38,5 @@ object Utils {
     }
 
     val BlockEntity.typeName: String
-        get() = Registries.BLOCK_ENTITY_TYPE.getId(type)?.path ?: "unknown"
+        get() = BuiltInRegistries.BLOCK_ENTITY_TYPE.getId(type)?.path ?: "unknown"
 }

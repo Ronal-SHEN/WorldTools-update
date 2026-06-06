@@ -1,16 +1,16 @@
 package org.waste.of.time.storage.cache
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.LecternBlockEntity
-import net.minecraft.block.entity.LockableContainerBlockEntity
-import net.minecraft.entity.Entity
-import net.minecraft.entity.vehicle.VehicleInventory
-import net.minecraft.inventory.EnderChestInventory
-import net.minecraft.registry.Registries
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.LecternBlockEntity
+import net.minecraft.world.level.block.entity.BaseContainerBlockEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.vehicle.ContainerEntity
+import net.minecraft.world.inventory.PlayerEnderChestContainer
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.Level
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.config
 import org.waste.of.time.WorldTools.mc
@@ -51,11 +51,11 @@ object HotCache {
     // map id's of maps that we've seen during the capture
     val mapIDs = mutableSetOf<Int>()
     val BlockEntity.isSupported get() =
-        this is LockableContainerBlockEntity
+        this is BaseContainerBlockEntity
                 || this is LecternBlockEntity
-    val Entity.isSupported get() = this is VehicleInventory
+    val Entity.isSupported get() = this is ContainerEntity
 
-    fun getEntitySerializableForChunk(chunkPos: ChunkPos, world: World) =
+    fun getEntitySerializableForChunk(chunkPos: ChunkPos, world: Level) =
         entities[chunkPos]?.let { entities ->
             RegionBasedEntities(chunkPos, entities, world)
         }
@@ -68,7 +68,7 @@ object HotCache {
      * @return True if the chunk is saved, false otherwise.
      */
     @Suppress("unused")
-    fun isChunkSaved(chunkX: Int, chunkZ: Int) = savedChunks.contains(ChunkPos.toLong(chunkX, chunkZ))
+    fun isChunkSaved(chunkX: Int, chunkZ: Int) = savedChunks.contains(ChunkPos.asLong(chunkX, chunkZ))
 
     fun clear() {
         chunks.clear()
@@ -81,7 +81,7 @@ object HotCache {
 
         // failing to reset this could cause users to accidentally save their echest contents on subsequent captures
         if (!mc.isInSingleplayer && !config.advanced.keepEnderChestContents) {
-            mc.player?.enderChestInventory = EnderChestInventory()
+            mc.player?.enderChestInventory = PlayerEnderChestContainer()
         }
         lastInteractedBlockEntity = null
         LOG.info("Cleared hot cache")
@@ -95,11 +95,11 @@ object HotCache {
             loadedBlockEntities.remove(pos)
         }
 
-        world?.registryKey?.value?.path?.let {
+        world?.dimension?.value?.path?.let {
             StatisticManager.dimensions.add(it)
         }
         if (config.debug.logSavedContainers) {
-            LOG.info("Saved block entity: ${Registries.BLOCK_ENTITY_TYPE.getId(type)?.path} at $pos")
+            LOG.info("Saved block entity: ${BuiltInRegistries.BLOCK_ENTITY_TYPE.getId(type)?.path} at $pos")
         }
     }
 

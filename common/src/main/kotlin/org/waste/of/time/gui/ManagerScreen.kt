@@ -1,21 +1,22 @@
 package org.waste.of.time.gui
+import net.minecraft.client.gui.components.*
+import net.minecraft.client.gui.layouts.*
 
 import me.shedaniel.autoconfig.AutoConfig
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.widget.*
-import net.minecraft.text.Text
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.network.chat.Component
 import org.waste.of.time.WorldTools.MAX_LEVEL_NAME_LENGTH
 import org.waste.of.time.config.WorldToolsConfig
 import org.waste.of.time.manager.CaptureManager
 import org.waste.of.time.manager.CaptureManager.currentLevelName
 import org.waste.of.time.manager.CaptureManager.levelName
 
-object ManagerScreen : Screen(Text.translatable("worldtools.gui.manager.title")) {
-    private lateinit var worldNameTextEntryWidget: TextFieldWidget
-    private lateinit var titleWidget: TextWidget
-    private lateinit var downloadButton: ButtonWidget
-    private lateinit var configButton: ButtonWidget
-    private lateinit var cancelButton: ButtonWidget
+object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.title")) {
+    private lateinit var worldNameTextEntryWidget: EditBox
+    private lateinit var titleWidget: StringWidget
+    private lateinit var downloadButton: Button
+    private lateinit var configButton: Button
+    private lateinit var cancelButton: Button
     private const val BUTTON_WIDTH = 90
 
     override fun init() {
@@ -26,19 +27,19 @@ object ManagerScreen : Screen(Text.translatable("worldtools.gui.manager.title"))
 
     override fun tick() {
         if (CaptureManager.capturing) {
-            downloadButton.message = Text.translatable("worldtools.gui.manager.button.stop_download")
-            worldNameTextEntryWidget.setPlaceholder(Text.of(currentLevelName))
+            downloadButton.message = Component.translatable("worldtools.gui.manager.button.stop_download")
+            worldNameTextEntryWidget.setPlaceholder(Component.of(currentLevelName))
             worldNameTextEntryWidget.setEditable(false)
         } else {
-            downloadButton.message = Text.translatable("worldtools.gui.manager.button.start_download")
+            downloadButton.message = Component.translatable("worldtools.gui.manager.button.start_download")
             worldNameTextEntryWidget.setEditable(true)
         }
         super.tick()
     }
 
     private fun setupTitle() {
-        titleWidget = TextWidget(Text.translatable("worldtools.gui.manager.title"), textRenderer)
-        SimplePositioningWidget.setPos(titleWidget, 0, 0, width, height, 0.5f, 0.01f)
+        titleWidget = StringWidget(Component.translatable("worldtools.gui.manager.title"), textRenderer)
+        FrameLayout.setPos(titleWidget, 0, 0, width, height, 0.5f, 0.01f)
         addDrawableChild(titleWidget)
     }
 
@@ -47,9 +48,9 @@ object ManagerScreen : Screen(Text.translatable("worldtools.gui.manager.title"))
         val adder = entryGridWidget.createAdder(3)
 
         worldNameTextEntryWidget = EnterTextField(
-            textRenderer, 0, 0, 250, 20, Text.of(levelName), client
+            textRenderer, 0, 0, 250, 20, Component.of(levelName), client
         ).apply {
-            setPlaceholder(Text.translatable("worldtools.gui.manager.world_name_placeholder", levelName))
+            setPlaceholder(Component.translatable("worldtools.gui.manager.world_name_placeholder", levelName))
             setMaxLength(MAX_LEVEL_NAME_LENGTH)
         }
         downloadButton = createButton("worldtools.gui.manager.button.start_download") {
@@ -66,7 +67,7 @@ object ManagerScreen : Screen(Text.translatable("worldtools.gui.manager.title"))
         adder.add(downloadButton, 1)
 
         entryGridWidget.refreshPositions()
-        SimplePositioningWidget.setPos(entryGridWidget, 0, titleWidget.y, width, height, 0.5f, 0.05f)
+        FrameLayout.setPos(entryGridWidget, 0, titleWidget.y, width, height, 0.5f, 0.05f)
         entryGridWidget.forEachChild(this::addDrawableChild)
     }
 
@@ -84,14 +85,14 @@ object ManagerScreen : Screen(Text.translatable("worldtools.gui.manager.title"))
         bottomAdder.add(cancelButton, 1)
 
         bottomGridWidget.refreshPositions()
-        SimplePositioningWidget.setPos(bottomGridWidget, 0, 0, width, height, 0.5f, .95f)
+        FrameLayout.setPos(bottomGridWidget, 0, 0, width, height, 0.5f, .95f)
         bottomGridWidget.forEachChild(this::addDrawableChild)
     }
 
-    private fun createGridWidget() = GridWidget().apply {
+    private fun createGridWidget() = GridLayout().apply {
         mainPositioner.margin(4, 4, 4, 4)
     }
 
-    private fun createButton(textKey: String, onClick: (ButtonWidget) -> Unit) =
-        ButtonWidget.Builder(Text.translatable(textKey), onClick).width(BUTTON_WIDTH).build()
+    private fun createButton(textKey: String, onClick: (Button) -> Unit) =
+        Button.Builder(Component.translatable(textKey), onClick).width(BUTTON_WIDTH).build()
 }

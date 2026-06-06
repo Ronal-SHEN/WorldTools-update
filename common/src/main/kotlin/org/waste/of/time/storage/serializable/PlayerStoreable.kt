@@ -1,12 +1,12 @@
 package org.waste.of.time.storage.serializable
 
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.world.entity.player.Player
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtIo
-import net.minecraft.text.MutableText
-import net.minecraft.util.Util
-import net.minecraft.util.WorldSavePath
-import net.minecraft.world.level.storage.LevelStorage.Session
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.Util
+import net.minecraft.world.level.storage.LevelResource
+import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils.asString
 import org.waste.of.time.WorldTools
 import org.waste.of.time.WorldTools.config
@@ -21,19 +21,19 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 data class PlayerStoreable(
-    val player: PlayerEntity
+    val player: Player
 ) : Cacheable, Storeable() {
     override fun shouldStore() = config.general.capture.players
 
-    override val verboseInfo: MutableText
+    override val verboseInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.player",
             player.name,
-            player.pos.asString(),
+            player.pos.debugInfo(),
             player.world.registryKey.value.path
         )
 
-    override val anonymizedInfo: MutableText
+    override val anonymizedInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.player.anonymized",
             player.name,
@@ -48,27 +48,27 @@ data class PlayerStoreable(
         HotCache.players.remove(this)
     }
 
-    override fun store(session: Session, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
+    override fun store(session: LevelStorageAccess, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
         savePlayerData(player, session)
         session.createSaveHandler()
         StatisticManager.players++
         StatisticManager.dimensions.add(player.world.registryKey.value.path)
     }
 
-    private fun savePlayerData(player: PlayerEntity, session: Session) {
+    private fun savePlayerData(player: Player, session: LevelStorageAccess) {
         try {
-            val playerDataDir = session.getDirectory(WorldSavePath.PLAYERDATA).toFile()
+            val playerDataDir = session.getLevelPath(LevelResource.PLAYER_DATA_DIR).toFile()
             playerDataDir.mkdirs()
 
             val newPlayerFile = File.createTempFile(player.uuidAsString + "-", ".dat", playerDataDir).toPath()
-            NbtIo.writeCompressed(player.writeNbt(NbtCompound()).apply {
+            NbtIo.writeCompressed(player.writeNbt(CompoundTag()).apply {
                 if (config.entity.censor.lastDeathLocation) {
                     remove("LastDeathLocation")
                 }
             }, newPlayerFile)
             val currentFile = File(playerDataDir, player.uuidAsString + ".dat").toPath()
             val backupFile = File(playerDataDir, player.uuidAsString + ".dat_old").toPath()
-            Util.backupAndReplace(currentFile, newPlayerFile, backupFile)
+            Util.safeReplaceFile(currentFile, newPlayerFile, backupFile)
         } catch (e: Exception) {
             WorldTools.LOG.warn("Failed to save player data for {}", player.name.string)
         }

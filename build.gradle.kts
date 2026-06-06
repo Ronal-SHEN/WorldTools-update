@@ -4,7 +4,7 @@ import net.fabricmc.loom.task.RemapJarTask
 plugins {
     kotlin("jvm") version ("2.1.0")
     id("architectury-plugin") version "3.4-SNAPSHOT"
-    id("dev.architectury.loom") version "1.9-SNAPSHOT" apply false
+    id("dev.architectury.loom") version "1.11-SNAPSHOT" apply false
     id("com.github.johnrengelman.shadow") version "8.1.1" apply false
 }
 
@@ -16,7 +16,7 @@ subprojects {
     apply(plugin = "dev.architectury.loom")
     dependencies {
         "minecraft"("com.mojang:minecraft:${project.properties["minecraft_version"]!!}")
-        "mappings"("net.fabricmc:yarn:${project.properties["yarn_mappings"]}:v2")
+        "mappings"(project.extensions.getByType(net.fabricmc.loom.api.LoomGradleExtensionAPI::class.java).officialMojangMappings())
     }
     if (path != ":common") {
         apply(plugin = "com.github.johnrengelman.shadow")
