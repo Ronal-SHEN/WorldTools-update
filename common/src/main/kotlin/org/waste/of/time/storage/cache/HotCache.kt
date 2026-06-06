@@ -80,7 +80,7 @@ object HotCache {
         mapIDs.clear()
 
         // failing to reset this could cause users to accidentally save their echest contents on subsequent captures
-        if (!mc.isInSingleplayer && !config.advanced.keepEnderChestContents) {
+        if (!mc.isLocalServer && !config.advanced.keepEnderChestContents) {
             mc.player?.enderChestInventory = PlayerEnderChestContainer()
         }
         lastInteractedBlockEntity = null

@@ -6,7 +6,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtIo
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.util.PathUtil
+import net.minecraft.FileUtil
 import net.minecraft.util.ExceptionCollector
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
@@ -42,7 +42,7 @@ open class CustomRegionBasedStorage internal constructor(
             cachedRegionFiles.removeLast()?.close()
         }
 
-        PathUtil.createDirectories(directory)
+        FileUtil.createDirectoriesSafe(directory)
         val path = directory.resolve("r." + pos.regionX + "." + pos.regionZ + MCA_EXTENSION)
         val regionFile = RegionFile(defaultStorageKey, path, directory, dsync)
         cachedRegionFiles.putAndMoveToFirst(longPos, regionFile)
@@ -53,7 +53,7 @@ open class CustomRegionBasedStorage internal constructor(
     fun write(pos: ChunkPos, nbt: CompoundTag?) {
         val regionFile = getRegionFile(pos)
         if (nbt == null) {
-            regionFile.delete(pos)
+            regionFile.clear(pos)
         } else {
             regionFile.getChunkDataOutputStream(pos).use { dataOutputStream ->
                 NbtIo.write(nbt, dataOutputStream as DataOutput)
@@ -68,20 +68,20 @@ open class CustomRegionBasedStorage internal constructor(
 
     fun getBlockEntities(chunkPos: ChunkPos): List<BlockEntity> =
         getNbtAt(chunkPos)
-            ?.getList("block_entities", 10)
+            ?.getListOrEmpty("block_entities")
             ?.filterIsInstance<CompoundTag>()
             ?.mapNotNull { compoundTag ->
-                val blockPos = BlockPos(compoundTag.getIntOr("x"), compoundTag.getIntOr("y"), compoundTag.getIntOr("z"))
-                val blockStateIdentifier = ResourceLocation.of(compoundTag.getString("id"))
-                val world = mc.world ?: return@mapNotNull null
+                val blockPos = BlockPos(compoundTag.getIntOr("x", 0), compoundTag.getIntOr("y", 0), compoundTag.getIntOr("z", 0))
+                val blockStateIdentifier = ResourceLocation.parse(compoundTag.getStringOr("id", ""))
+                val world = mc.level ?: return@mapNotNull null
 
                 runCatching {
                     val block = BuiltInRegistries.BLOCK.get(blockStateIdentifier)
                     BuiltInRegistries.BLOCK_ENTITY_TYPE
-                        .getOptionalValue(blockStateIdentifier)
+                        .getOptional(blockStateIdentifier)
                         .orElse(null)
-                        ?.instantiate(blockPos, block.defaultState)?.apply {
-                            read(compoundTag, world.registryAccess)
+                        ?.create(blockPos, block.defaultBlockState)?.apply {
+                            loadWithComponents(compoundTag, world.registryAccess)
                         }
                 }.getOrNull()
             } ?: emptyList()

@@ -2,7 +2,7 @@ package org.waste.of.time.storage.serializable
 
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.util.PathUtil
+import net.minecraft.FileUtil
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils
@@ -39,7 +39,7 @@ class MetadataStoreable : Storeable() {
         session.writeIconFile()
 
         session.getLevelPath(LevelResource.ROOT).resolve(MOD_NAME).apply {
-            PathUtil.createDirectories(this)
+            FileUtil.createDirectoriesSafe(this)
 
             writePlayerEntryList()
             writeDimensionTree()
@@ -56,7 +56,7 @@ class MetadataStoreable : Storeable() {
     }
 
     private fun Path.writePlayerEntryList() {
-        if (mc.isInSingleplayer) return
+        if (mc.isLocalServer) return
 
         mc.connection?.playerList?.let { playerList ->
             if (playerList.isEmpty()) return@let
@@ -95,7 +95,7 @@ class MetadataStoreable : Storeable() {
             appendLine("# $currentLevelName World Save - Snapshot Details")
         }
 
-        if (mc.isInSingleplayer) {
+        if (mc.isLocalServer) {
             appendLine("![World Icon](../icon.png)")
         } else {
             appendLine("![Server Icon](../icon.png)")

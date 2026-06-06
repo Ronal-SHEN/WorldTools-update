@@ -3,7 +3,7 @@ package org.waste.of.time.storage.serializable
 import com.google.gson.JsonObject
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.util.PathUtil
+import net.minecraft.FileUtil
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.manager.MessageManager.translateHighlight
@@ -52,7 +52,7 @@ class StatisticStoreable : Storeable() {
             addProperty("DataVersion", CURRENT_VERSION)
         }
 
-        PathUtil.createDirectories(statDirectory)
+        FileUtil.createDirectoriesSafe(statDirectory)
         Files.newBufferedWriter(
             statDirectory.resolve("$uuid.json"),
             StandardCharsets.UTF_8

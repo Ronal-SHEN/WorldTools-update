@@ -40,7 +40,7 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
     private fun setupTitle() {
         titleWidget = StringWidget(Component.translatable("worldtools.gui.manager.title"), textRenderer)
         FrameLayout.setPos(titleWidget, 0, 0, width, height, 0.5f, 0.01f)
-        addDrawableChild(titleWidget)
+        addRenderableWidget(titleWidget)
     }
 
     private fun setupEntryGrid() {
@@ -68,7 +68,7 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
 
         entryGridWidget.refreshPositions()
         FrameLayout.setPos(entryGridWidget, 0, titleWidget.y, width, height, 0.5f, 0.05f)
-        entryGridWidget.forEachChild(this::addDrawableChild)
+        entryGridWidget.forEachChild(this::addRenderableWidget)
     }
 
     private fun setupBottomGrid() {
@@ -86,7 +86,7 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
 
         bottomGridWidget.refreshPositions()
         FrameLayout.setPos(bottomGridWidget, 0, 0, width, height, 0.5f, .95f)
-        bottomGridWidget.forEachChild(this::addDrawableChild)
+        bottomGridWidget.forEachChild(this::addRenderableWidget)
     }
 
     private fun createGridWidget() = GridLayout().apply {

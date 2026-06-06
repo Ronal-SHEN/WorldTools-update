@@ -40,13 +40,13 @@ object DataInjectionHandler {
 
     private fun ContainerEntity.dataToVehicle(screen: ContainerScreen) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
+            setItem(it.slot, it.item)
         }
     }
 
     private fun MinecartHopper.dataToHopperMinecart(screen: HopperScreen) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
+            setItem(it.slot, it.item)
         }
     }
 
@@ -93,9 +93,9 @@ object DataInjectionHandler {
 
         // ToDo: Find out if its possible to get the map state update (currently has no effect)
         //        screen.getContainerSlots().filter {
-        //            it.stack.item == Items.FILLED_MAP
+        //            it.item.item == Items.FILLED_MAP
         //        }.forEach {
-        //            it.stack.components.get(DataComponentTypes.MAP_ID)?.let { id ->
+        //            it.item.components.get(DataComponentTypes.MAP_ID)?.let { id ->
         //                HotCache.mapIDs.add(id.id)
         //            }
         //        }
@@ -104,72 +104,72 @@ object DataInjectionHandler {
     }
 
     private fun dataToEnderChest(screen: ContainerScreen) {
-        if (mc.isInSingleplayer) return
-        val inventory = screen.screenHandler.inventory as? SimpleContainer ?: return
+        if (mc.isLocalServer) return
+        val inventory = screen.menu.container as? SimpleContainer ?: return
         if (inventory.size() != 27) return
         mc.player?.enderChestInventory = PlayerEnderChestContainer().apply {
             repeat(inventory.size()) { i ->
-                setStack(i, inventory.getStack(i))
+                setItem(i, inventory.getStack(i))
             }
         }
     }
 
     private fun AbstractFurnaceBlockEntity.dataToFurnace(screen: AbstractFurnaceScreen<*>) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
+            setItem(it.slot, it.item)
         }
     }
 
     private fun BarrelBlockEntity.dataToBarrelBlock(screen: ContainerScreen) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
+            setItem(it.slot, it.item)
         }
     }
 
     private fun BrewingStandBlockEntity.dataToBrewingStand(screen: BrewingStandScreen) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
+            setItem(it.slot, it.item)
         }
     }
 
     private fun ChestBlockEntity.dataToChest(screen: ContainerScreen) {
-        val facing = cachedState[ChestBlock.FACING] ?: return
-        val chestType = cachedState[ChestBlock.TYPE] ?: return
+        val facing = blockState[ChestBlock.FACING] ?: return
+        val chestType = blockState[ChestBlock.TYPE] ?: return
         val containerSlots = screen.getContainerSlots()
-        val inventories = containerSlots.partition { it.index < 27 }
+        val inventories = containerSlots.partition { it.slot < 27 }
 
         when (chestType) {
             ChestType.SINGLE -> {
                 containerSlots.forEach {
-                    setStack(it.index, it.stack)
+                    setItem(it.slot, it.item)
                 }
             }
 
             ChestType.LEFT -> {
-                val pos = pos.offset(facing.rotateYClockwise())
-                val otherChest = world?.getBlockEntity(pos)
+                val pos = pos.relative(facing.clockWise)
+                val otherChest = level?.getBlockEntity(pos)
                 if (otherChest !is ChestBlockEntity) return
 
                 inventories.first.forEach {
-                    otherChest.setStack(it.index, it.stack)
+                    otherChest.setItem(it.slot, it.item)
                 }
                 inventories.second.forEach {
-                    setStack(it.index - 27, it.stack)
+                    setItem(it.slot - 27, it.item)
                 }
 
                 scannedBlockEntities[otherChest.pos] = otherChest
             }
 
             ChestType.RIGHT -> {
-                val pos = pos.offset(facing.rotateYCounterclockwise())
-                val otherChest = world?.getBlockEntity(pos)
+                val pos = pos.relative(facing.counterClockWise)
+                val otherChest = level?.getBlockEntity(pos)
                 if (otherChest !is ChestBlockEntity) return
 
                 inventories.first.forEach {
-                    setStack(it.index, it.stack)
+                    setItem(it.slot, it.item)
                 }
                 inventories.second.forEach {
-                    otherChest.setStack(it.index - 27, it.stack)
+                    otherChest.setItem(it.slot - 27, it.item)
                 }
 
                 scannedBlockEntities[otherChest.pos] = otherChest
@@ -179,32 +179,32 @@ object DataInjectionHandler {
 
     private fun DispenserBlockEntity.dataToDispenserOrDropper(screen: DispenserScreen) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
+            setItem(it.slot, it.item)
         }
     }
 
     private fun HopperBlockEntity.dataToHopper(screen: HopperScreen) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
+            setItem(it.slot, it.item)
         }
     }
 
     private fun ShulkerBoxBlockEntity.dataToShulkerBox(screen: ShulkerBoxScreen) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
+            setItem(it.slot, it.item)
         }
     }
 
     private fun LecternBlockEntity.dataToLectern(screen: LecternScreen) {
-        book = screen.screenHandler.bookItem
+        book = screen.menu.book
     }
 
     private fun CrafterBlockEntity.dataToCrafter(screen: CrafterScreen) {
         screen.getContainerSlots().forEach {
-            setStack(it.index, it.stack)
-            setSlotEnabled(it.index, !isSlotDisabled(it.index))
+            setItem(it.slot, it.item)
+            setSlotState(it.slot, !isSlotDisabled(it.slot))
         }
     }
 
-    private fun AbstractContainerScreen<*>.getContainerSlots() = screenHandler.slots.filter { it.inventory !is Inventory }
+    private fun AbstractContainerScreen<*>.getContainerSlots() = menu.slots.filter { it.container !is Inventory }
 }

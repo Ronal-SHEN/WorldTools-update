@@ -29,7 +29,7 @@ object CaptureManager {
     var lastWorldKeys = mutableSetOf<ResourceKey<Level>>()
 
     val levelName: String
-        get() = if (mc.isInSingleplayer) {
+        get() = if (mc.isLocalServer) {
             mc.server?.serverMotd?.substringAfter(" - ")?.sanitizeWorldName() ?: "Singleplayer"
         } else {
             mc.connection?.serverInfo?.address?.sanitizeWorldName() ?: "Multiplayer"
@@ -45,7 +45,7 @@ object CaptureManager {
             return
         }
 
-        if (mc.isInSingleplayer) {
+        if (mc.isLocalServer) {
             MessageManager.sendInfo("worldtools.log.info.singleplayer_capture")
         }
 
