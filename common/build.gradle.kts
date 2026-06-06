@@ -1,4 +1,4 @@
-architectury { common("fabric") }
+architectury { common("fabric", "neoforge") }
 
 loom {
     accessWidenerPath.set(File("src/main/resources/worldtools.accesswidener"))
