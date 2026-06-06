@@ -29,15 +29,15 @@ data class PlayerStoreable(
         get() = translateHighlight(
             "worldtools.capture.saved.player",
             player.name,
-            player.pos.debugInfo(),
-            player.world.registryKey.value.path
+            "${player.blockX}, ${player.blockY}, ${player.blockZ}",
+            player.level().dimension().location().path
         )
 
     override val anonymizedInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.player.anonymized",
             player.name,
-            player.world.registryKey.value.path
+            player.level().dimension().location().path
         )
 
     override fun cache() {
@@ -50,9 +50,8 @@ data class PlayerStoreable(
 
     override fun store(session: LevelStorageAccess, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
         savePlayerData(player, session)
-        session.createSaveHandler()
         StatisticManager.players++
-        StatisticManager.dimensions.add(player.world.registryKey.value.path)
+        StatisticManager.dimensions.add(player.level().dimension().location().path)
     }
 
     private fun savePlayerData(player: Player, session: LevelStorageAccess) {
@@ -60,14 +59,14 @@ data class PlayerStoreable(
             val playerDataDir = session.getLevelPath(LevelResource.PLAYER_DATA_DIR).toFile()
             playerDataDir.mkdirs()
 
-            val newPlayerFile = File.createTempFile(player.uuidAsString + "-", ".dat", playerDataDir).toPath()
-            NbtIo.writeCompressed(player.writeNbt(CompoundTag()).apply {
+            val newPlayerFile = File.createTempFile(player.stringUUID + "-", ".dat", playerDataDir).toPath()
+            NbtIo.writeCompressed(player.saveWithoutId(CompoundTag()).apply {
                 if (config.entity.censor.lastDeathLocation) {
                     remove("LastDeathLocation")
                 }
             }, newPlayerFile)
-            val currentFile = File(playerDataDir, player.uuidAsString + ".dat").toPath()
-            val backupFile = File(playerDataDir, player.uuidAsString + ".dat_old").toPath()
+            val currentFile = File(playerDataDir, player.stringUUID + ".dat").toPath()
+            val backupFile = File(playerDataDir, player.stringUUID + ".dat_old").toPath()
             Util.safeReplaceFile(currentFile, newPlayerFile, backupFile)
         } catch (e: Exception) {
             WorldTools.LOG.warn("Failed to save player data for {}", player.name.string)

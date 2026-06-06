@@ -32,7 +32,7 @@ class StatisticStoreable : Storeable() {
     override fun store(session: LevelStorageSource.LevelStorageAccess, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
         // we need to get the stat map from the player's stat handler instead of the packet because the packet only
         // contains the stats that have changed since the last time the packet was sent
-        val completeStatMap = mc.player?.statHandler?.statMap?.toMap() ?: return
+        val completeStatMap = mc.player?.stats?.stats?.toMap() ?: return
         val uuid = mc.player?.uuid ?: return
         val statDirectory = session.getLevelPath(LevelResource.PLAYER_STATS_DIR)
 
@@ -46,7 +46,7 @@ class StatisticStoreable : Storeable() {
                             typeObject.addProperty(it, value)
                         }
                     }
-                    add(BuiltInRegistries.STAT_TYPE.getId(type).toString(), typeObject)
+                    add(BuiltInRegistries.STAT_TYPE.getKey(type).toString(), typeObject)
                 }
             })
             addProperty("DataVersion", CURRENT_VERSION)

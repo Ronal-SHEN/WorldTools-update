@@ -103,7 +103,7 @@ class LevelDataStoreable : Storeable() {
         putInt("SpawnZ", player.level().levelData.spawnPos.z)
         putFloat("SpawnAngle", player.level().levelData.spawnAngle)
         putLong("Time", player.level().gameTime)
-        putLong("DayTime", player.level().gameTimeOfDay)
+        putLong("DayTime", player.level().dayTime)
         putLong("LastPlayed", System.currentTimeMillis())
         putString("LevelName", currentLevelName)
         putInt("version", 19133)

@@ -80,7 +80,7 @@ class MetadataStoreable : Storeable() {
             iconFile.ifPresent {
                 it.writeBytes(favicon)
             }
-        } ?: mc.singleplayerServer?.iconFile?.ifPresent { spIconPath ->
+        } ?: mc.singleplayerServer?.getFile("icon.png")?.takeIf { it.toFile().exists() }?.let { spIconPath ->
             iconFile.ifPresent {
                 it.writeBytes(spIconPath.toFile().readBytes())
             }
@@ -128,7 +128,7 @@ class MetadataStoreable : Storeable() {
                 if (sample.isEmpty()) return@l
                 appendLine("- **Short Label**: `${sample.joinToString { it.name }}`")
             }
-            info.playerListSummary?.let l@ {
+            info.playerList?.let l@ {
                 if (it.isEmpty()) return@l
                 appendLine("- **Full Label**: `${it.joinToString(" ") { str -> str.string }}`")
             }
@@ -172,7 +172,7 @@ class MetadataStoreable : Storeable() {
         appendLine(entry.skin.model)
         entry.chatSession?.let {
             append("${it.sessionId}, ")
-            append("${it.publicKeyData?.data}, ")
+            append("${it.asData()}, ")
         }
     }
 }

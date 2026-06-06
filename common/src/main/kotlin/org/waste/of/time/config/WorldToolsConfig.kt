@@ -166,10 +166,10 @@ class WorldToolsConfig : ConfigData {
         var fromCacheLoadedEntityColor = 0xFFA500
         @ConfigEntry.ColorPicker
         var accentColor = 0xA2FF4C
-        var captureBarColor = BossEvent.Color.PINK
-        var captureBarStyle = BossEvent.Style.NOTCHED_10
-        var progressBarColor = BossEvent.Color.GREEN
-        var progressBarStyle = BossEvent.Style.PROGRESS
+        var captureBarColor = BossEvent.BossBarColor.PINK
+        var captureBarStyle = BossEvent.BossBarOverlay.NOTCHED_10
+        var progressBarColor = BossEvent.BossBarColor.GREEN
+        var progressBarStyle = BossEvent.BossBarOverlay.PROGRESS
         @ConfigEntry.BoundedDiscrete(min = 50, max = 60000)
         var progressBarTimeout = 3000L
     }

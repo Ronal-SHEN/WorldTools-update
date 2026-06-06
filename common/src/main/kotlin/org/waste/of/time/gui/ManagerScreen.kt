@@ -90,7 +90,7 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
     }
 
     private fun createGridWidget() = GridLayout().apply {
-        defaultCellSetting().margin(4, 4, 4, 4)
+        defaultCellSetting().padding(4, 4, 4, 4)
     }
 
     private fun createButton(textKey: String, onClick: (Button) -> Unit) =

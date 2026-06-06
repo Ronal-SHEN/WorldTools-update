@@ -76,12 +76,12 @@ open class CustomRegionBasedStorage internal constructor(
                 val world = mc.level ?: return@mapNotNull null
 
                 runCatching {
-                    val block = BuiltInRegistries.BLOCK.get(blockStateIdentifier)
+                    val block = BuiltInRegistries.BLOCK.getValue(blockStateIdentifier)
                     BuiltInRegistries.BLOCK_ENTITY_TYPE
                         .getOptional(blockStateIdentifier)
                         .orElse(null)
-                        ?.create(blockPos, block.defaultBlockState)?.apply {
-                            loadWithComponents(compoundTag, world.registryAccess)
+                        ?.create(blockPos, block.defaultBlockState())?.apply {
+                            loadWithComponents(compoundTag, world.registryAccess())
                         }
                 }.getOrNull()
             } ?: emptyList()

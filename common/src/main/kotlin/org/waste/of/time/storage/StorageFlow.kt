@@ -40,7 +40,7 @@ object StorageFlow {
 
         try {
             LOG.info("Started caching")
-            mc.levelSource.createSession(levelName).use { openSession ->
+            mc.levelSource.createAccess(levelName).use { openSession ->
                 sharedFlow.collect { storeable ->
                     if (!storeable.shouldStore()) {
                         return@collect

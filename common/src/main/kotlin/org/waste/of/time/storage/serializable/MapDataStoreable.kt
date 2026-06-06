@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtUtils
 import net.minecraft.nbt.NbtIo
 import net.minecraft.nbt.NbtOps
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource

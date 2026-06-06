@@ -40,7 +40,7 @@ object HotCache {
         chunks.values
             .flatMap { it.chunk.blockEntities.values }
             .filter { it.isSupported }
-            .filterNot { scannedBlockEntities.containsKey(it.pos) }
+            .filterNot { scannedBlockEntities.containsKey(it.blockPos) }
     }
     val unscannedEntities by LazyUpdatingDelegate(100) {
         entities.values
@@ -89,17 +89,17 @@ object HotCache {
 
     fun BlockEntity.markScanned(fromCache: Boolean = false) {
         if (fromCache) {
-            loadedBlockEntities[pos] = this
+            loadedBlockEntities[blockPos] = this
         } else {
-            scannedBlockEntities[pos] = this
-            loadedBlockEntities.remove(pos)
+            scannedBlockEntities[blockPos] = this
+            loadedBlockEntities.remove(blockPos)
         }
 
-        world?.dimension?.value?.path?.let {
+        level?.dimension()?.location()?.path?.let {
             StatisticManager.dimensions.add(it)
         }
         if (config.debug.logSavedContainers) {
-            LOG.info("Saved block entity: ${BuiltInRegistries.BLOCK_ENTITY_TYPE.getId(type)?.path} at $pos")
+            LOG.info("Saved block entity: ${BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(type)?.path} at $blockPos")
         }
     }
 

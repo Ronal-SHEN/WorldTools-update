@@ -60,7 +60,7 @@ object StatisticManager {
             } else {
                 val dimensionsFormatted = dimensions.map {
                     Component.literal(it).withStyle { text ->
-                        text.setColor(TextColor.fromRgb(config.render.accentColor))
+                        text.withColor(TextColor.fromRgb(config.render.accentColor))
                     }
                 }.joinWithAnd()
                 Component.translatable("worldtools.capture.saved").copy()
@@ -73,7 +73,7 @@ object StatisticManager {
     fun List<Component>.joinWithAnd(): Component {
         val and = Component.translatable("worldtools.capture.and")
         return when (size) {
-            0 -> Component.of("")
+            0 -> Component.literal("")
             1 -> this[0]
             2 -> this[0].copy().append(and).append(this[1])
             else -> dropLast(1).join().append(and).append(last())
@@ -81,7 +81,7 @@ object StatisticManager {
     }
 
     private fun List<Component>.join(): MutableComponent {
-        val comma = Component.of(", ")
+        val comma = Component.literal(", ")
         return foldIndexed(Component.literal("")) { index, acc, text ->
             if (index == 0) return@foldIndexed text.copy()
             acc.append(comma).append(text)

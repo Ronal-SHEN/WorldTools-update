@@ -18,7 +18,7 @@ class EnterTextField(
                 CaptureManager.stop()
             } else {
                 client?.setScreen(null)
-                CaptureManager.start(text)
+                CaptureManager.start(value)
             }
             return true
         }

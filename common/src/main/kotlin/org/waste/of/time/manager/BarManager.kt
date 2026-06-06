@@ -14,7 +14,7 @@ object BarManager {
     val progressBar =
         LerpingBossEvent(
             UUID.randomUUID(),
-            Component.of(""),
+            Component.literal(""),
             0f,
             config.render.progressBarColor,
             config.render.progressBarStyle,
@@ -26,7 +26,7 @@ object BarManager {
     private val captureInfoBar =
         LerpingBossEvent(
             UUID.randomUUID(),
-            Component.of(""),
+            Component.literal(""),
             1.0f,
             config.render.captureBarColor,
             config.render.captureBarStyle,
@@ -50,7 +50,7 @@ object BarManager {
     fun updateCapture() {
         captureInfoBar.name = StatisticManager.infoMessage
         captureInfoBar.color = config.render.captureBarColor
-        captureInfoBar.style = config.render.captureBarStyle
+        captureInfoBar.overlay = config.render.captureBarStyle
         progressBar.color = config.render.progressBarColor
         progressBar.progress = 0f
 

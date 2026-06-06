@@ -32,8 +32,8 @@ class AdvancementsStoreable : Storeable() {
         get() = verboseInfo
 
     private val progressMapCodec =
-        DataFixTypes.PLAYER_ADVANCEMENTS_DIR.wrapCodec(
-            PlayerAdvancements.ProgressMap.CODEC, mc.fixerUpper, CURRENT_VERSION
+        DataFixTypes.ADVANCEMENTS.wrapCodec(
+            PlayerAdvancements.Data.CODEC, mc.fixerUpper, CURRENT_VERSION
         )
 
     override fun store(
@@ -43,17 +43,17 @@ class AdvancementsStoreable : Storeable() {
         val uuid = mc.player?.uuid ?: return
         val progress = mc.player
             ?.connection
-            ?.advancementHandler
-            ?.advancementProgresses ?: return
+            ?.advancements
+            ?.progress ?: return
         val progressMap = progress.entries
-            .filter { it.value.isAnyObtained }
+            .filter { it.value.hasProgress() }
             .associate {
                 it.key.id to it.value
             }
         val jsonElement =
             progressMapCodec.encodeStart(
                 JsonOps.INSTANCE,
-                PlayerAdvancements.ProgressMap(progressMap)
+                PlayerAdvancements.Data(progressMap)
             ).getOrThrow() as JsonElement
 
 

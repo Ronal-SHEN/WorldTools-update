@@ -38,10 +38,7 @@ class EndFlow : Storeable() {
                 currentLevelName
             ).copy().withStyle {
                 it.withClickEvent(
-                    ClickEvent(
-                        ClickEvent.Action.OPEN_FILE,
-                        session.getLevelPath(LevelResource.ROOT).toFile().path
-                    )
+                    ClickEvent.OpenFile(session.getLevelPath(LevelResource.ROOT).toFile())
                 )
             }
 

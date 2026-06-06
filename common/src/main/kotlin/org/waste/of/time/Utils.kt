@@ -38,5 +38,5 @@ object Utils {
     }
 
     val BlockEntity.typeName: String
-        get() = BuiltInRegistries.BLOCK_ENTITY_TYPE.getId(type)?.path ?: "unknown"
+        get() = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(type)?.path ?: "unknown"
 }
