@@ -16,7 +16,7 @@ public class DebugRendererMixin {
     public void renderInject(
             PoseStack matrices,
             Frustum frustum,
-            MultiBufferSource.Immediate vertexConsumers,
+            MultiBufferSource.BufferSource vertexConsumers,
             double cameraX,
             double cameraY,
             double cameraZ,
