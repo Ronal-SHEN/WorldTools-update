@@ -28,7 +28,7 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
     override fun tick() {
         if (CaptureManager.capturing) {
             downloadButton.message = Component.translatable("worldtools.gui.manager.button.stop_download")
-            worldNameTextEntryWidget.setPlaceholder(Component.of(currentLevelName))
+            worldNameTextEntryWidget.setHint(Component.literal(currentLevelName))
             worldNameTextEntryWidget.setEditable(false)
         } else {
             downloadButton.message = Component.translatable("worldtools.gui.manager.button.start_download")
@@ -38,59 +38,59 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
     }
 
     private fun setupTitle() {
-        titleWidget = StringWidget(Component.translatable("worldtools.gui.manager.title"), textRenderer)
-        FrameLayout.setPos(titleWidget, 0, 0, width, height, 0.5f, 0.01f)
+        titleWidget = StringWidget(Component.translatable("worldtools.gui.manager.title"), font)
+        FrameLayout.alignInRectangle(titleWidget, 0, 0, width, height, 0.5f, 0.01f)
         addRenderableWidget(titleWidget)
     }
 
     private fun setupEntryGrid() {
         val entryGridWidget = createGridWidget()
-        val adder = entryGridWidget.createAdder(3)
+        val adder = entryGridWidget.createRowHelper(3)
 
         worldNameTextEntryWidget = EnterTextField(
-            textRenderer, 0, 0, 250, 20, Component.of(levelName), client
+            font, 0, 0, 250, 20, Component.literal(levelName), minecraft
         ).apply {
-            setPlaceholder(Component.translatable("worldtools.gui.manager.world_name_placeholder", levelName))
+            setHint(Component.translatable("worldtools.gui.manager.world_name_placeholder", levelName))
             setMaxLength(MAX_LEVEL_NAME_LENGTH)
         }
         downloadButton = createButton("worldtools.gui.manager.button.start_download") {
             if (CaptureManager.capturing) {
-                client?.setScreen(null)
+                minecraft?.setScreen(null)
                 CaptureManager.stop()
             } else {
-                client?.setScreen(null)
-                CaptureManager.start(worldNameTextEntryWidget.text)
+                minecraft?.setScreen(null)
+                CaptureManager.start(worldNameTextEntryWidget.value)
             }
         }
 
-        adder.add(worldNameTextEntryWidget, 2)
-        adder.add(downloadButton, 1)
+        adder.addChild(worldNameTextEntryWidget, 2)
+        adder.addChild(downloadButton, 1)
 
-        entryGridWidget.refreshPositions()
-        FrameLayout.setPos(entryGridWidget, 0, titleWidget.y, width, height, 0.5f, 0.05f)
-        entryGridWidget.forEachChild(this::addRenderableWidget)
+        entryGridWidget.arrangeElements()
+        FrameLayout.alignInRectangle(entryGridWidget, 0, titleWidget.y, width, height, 0.5f, 0.05f)
+        entryGridWidget.visitWidgets(this::addRenderableWidget)
     }
 
     private fun setupBottomGrid() {
         val bottomGridWidget = createGridWidget()
-        val bottomAdder = bottomGridWidget.createAdder(2)
+        val bottomAdder = bottomGridWidget.createRowHelper(2)
         configButton = createButton("worldtools.gui.manager.button.config") {
-            client?.setScreen(AutoConfig.getConfigScreen(WorldToolsConfig::class.java, this).get())
+            minecraft?.setScreen(AutoConfig.getConfigScreen(WorldToolsConfig::class.java, this).get())
         }
         cancelButton = createButton("worldtools.gui.manager.button.cancel") {
-            client?.setScreen(null)
+            minecraft?.setScreen(null)
         }
 
-        bottomAdder.add(configButton, 1)
-        bottomAdder.add(cancelButton, 1)
+        bottomAdder.addChild(configButton, 1)
+        bottomAdder.addChild(cancelButton, 1)
 
-        bottomGridWidget.refreshPositions()
-        FrameLayout.setPos(bottomGridWidget, 0, 0, width, height, 0.5f, .95f)
-        bottomGridWidget.forEachChild(this::addRenderableWidget)
+        bottomGridWidget.arrangeElements()
+        FrameLayout.alignInRectangle(bottomGridWidget, 0, 0, width, height, 0.5f, .95f)
+        bottomGridWidget.visitWidgets(this::addRenderableWidget)
     }
 
     private fun createGridWidget() = GridLayout().apply {
-        mainPositioner.margin(4, 4, 4, 4)
+        defaultCellSetting().margin(4, 4, 4, 4)
     }
 
     private fun createButton(textKey: String, onClick: (Button) -> Unit) =

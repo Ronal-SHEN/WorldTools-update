@@ -30,9 +30,9 @@ object CaptureManager {
 
     val levelName: String
         get() = if (mc.isLocalServer) {
-            mc.server?.serverMotd?.substringAfter(" - ")?.sanitizeWorldName() ?: "Singleplayer"
+            mc.singleplayerServer?.motd?.substringAfter(" - ")?.sanitizeWorldName() ?: "Singleplayer"
         } else {
-            mc.connection?.serverInfo?.address?.sanitizeWorldName() ?: "Multiplayer"
+            mc.connection?.serverData?.ip?.sanitizeWorldName() ?: "Multiplayer"
         }
 
     fun toggleCapture() {
@@ -62,7 +62,7 @@ object CaptureManager {
             potentialName.ifBlank { levelName }
         } ?: levelName
 
-        val worldExists = mc.levelSource.savesDirectory.resolve(potentialName).toFile().exists()
+        val worldExists = mc.levelSource.baseDir.resolve(potentialName).toFile().exists()
         if (worldExists && !confirmed) {
             mc.setScreen(ConfirmScreen(
                 { yes ->
@@ -78,11 +78,11 @@ object CaptureManager {
         HotCache.clear()
         currentLevelName = potentialName
         lastPlayer = mc.player
-        lastWorldKeys.addAll(mc.connection?.worldKeys ?: emptySet())
+        lastWorldKeys.addAll(mc.connection?.levels() ?: emptySet())
         MessageManager.sendInfo("worldtools.log.info.started_capture", potentialName)
         if (config.debug.logSettings) logCaptureSettingsState()
         storeJob = StorageFlow.launch(potentialName)
-        mc.connection?.sendPacketToServer(ServerboundClientCommandPacket(ServerboundClientCommandPacket.Mode.REQUEST_STATS))
+        mc.connection?.send(ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.REQUEST_STATS))
         capturing = true
 
         // Need to wait until the storage flow is running before syncing the cache
@@ -126,17 +126,17 @@ object CaptureManager {
     }
 
     private fun syncCacheFromWorldState() {
-        val world = mc.world ?: return
-        val diameter = world.chunkManager.chunks.diameter
+        val world = mc.level ?: return
+        val diameter = world.chunkSource.storage.viewRange
 
         repeat(diameter * diameter) { i ->
-            world.chunkManager.chunks.getChunk(i)?.let { chunk ->
+            world.chunkSource.storage.getChunk(i)?.let { chunk ->
                 RegionBasedChunk(chunk).cache()
                 BlockEntityLoadable(chunk).emit()
             }
         }
 
-        world.entities.forEach {
+        world.entitiesForRendering().forEach {
             if (it is Player) {
                 PlayerStoreable(it).cache()
             } else {

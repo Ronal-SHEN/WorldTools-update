@@ -3,6 +3,7 @@ package org.waste.of.time.storage.serializable
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtUtils
 import net.minecraft.nbt.NbtIo
+import net.minecraft.nbt.NbtOps
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource
@@ -37,14 +38,14 @@ class MapDataStoreable : Storeable() {
             dataDirectory.toFile().mkdirs()
         }
 
-        mc.world?.let { world ->
-            world.mapStates?.filter { (component, _) ->
-                HotCache.mapIDs.contains(component.id)
+        mc.level?.let { world ->
+            world.allMapData?.filter { (component, _) ->
+                HotCache.mapIDs.contains(component.id())
             }?.forEach { (component, mapState) ->
-                val id = component.id
+                val id = component.id()
                 CompoundTag().apply {
-                    put("data", mapState.writeNbt(CompoundTag(), world.registryManager))
-                    NbtUtils.addDataVersion(this)
+                    put("data", MapItemSavedData.CODEC.encodeStart(world.registryAccess().createSerializationContext(NbtOps.INSTANCE), mapState).getOrThrow())
+                    NbtUtils.addCurrentDataVersion(this)
                     val mapFile = dataDirectory.resolve("map_$id${WorldTools.DAT_EXTENSION}")
                     if (!mapFile.exists()) {
                         mapFile.toFile().createNewFile()

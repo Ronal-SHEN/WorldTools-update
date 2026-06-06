@@ -73,11 +73,11 @@ object Events {
     }
 
     fun onClientTickStart() {
-        if (CAPTURE_KEY.consumeClick() && mc.world != null && mc.screen == null) {
+        if (CAPTURE_KEY.consumeClick() && mc.level != null && mc.screen == null) {
             CaptureManager.toggleCapture()
         }
 
-        if (CONFIG_KEY.consumeClick() && mc.world != null && mc.screen == null) {
+        if (CONFIG_KEY.consumeClick() && mc.level != null && mc.screen == null) {
             mc.setScreen(ManagerScreen)
         }
 
@@ -88,7 +88,7 @@ object Events {
     fun onClientJoin() {
         HotCache.clear()
         StorageFlow.lastStored = null
-        StatisticManager.updateScreenAndTick()
+        StatisticManager.reset()
         if (config.general.autoDownload) CaptureManager.start()
     }
 
@@ -99,7 +99,7 @@ object Events {
 
     fun onInteractBlock(world: Level, hitResult: BlockHitResult) {
         if (!capturing) return
-        val blockEntity = world.getBlockEntity(hitResult.blockPosition)
+        val blockEntity = world.getBlockEntity(hitResult.blockPos)
         HotCache.lastInteractedBlockEntity = blockEntity
         HotCache.lastInteractedEntity = null
     }
@@ -112,23 +112,23 @@ object Events {
 
     fun onDebugRenderStart(
         matrices: PoseStack,
-        vertexConsumers: MultiBufferSource.Immediate,
+        vertexConsumers: MultiBufferSource.BufferSource,
         cameraX: Double,
         cameraY: Double,
         cameraZ: Double
     ) {
-        if (!capturing || !config.runTick.renderNotYetCachedContainers) return
+        if (!capturing || !config.render.renderNotYetCachedContainers) return
 
         val vertexConsumer = vertexConsumers.getBuffer(RenderType.lines()) ?: return
 
         HotCache.unscannedBlockEntities
-            .forEach { render(it.pos.vec, cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.runTick.unscannedContainerColor)) }
+            .forEach { render(it.blockPos.vec, cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.render.unscannedContainerColor)) }
 
         HotCache.loadedBlockEntities
-            .forEach { render(it.value.pos.vec, cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.runTick.fromCacheLoadedContainerColor)) }
+            .forEach { render(it.value.blockPos.vec, cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.render.fromCacheLoadedContainerColor)) }
 
         HotCache.unscannedEntities
-            .forEach { render(it.entity.pos.add(-.5, .0, -.5), cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.runTick.unscannedEntityColor)) }
+            .forEach { render(it.entity.position().add(-.5, .0, -.5), cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.render.unscannedEntityColor)) }
     }
 
     private val BlockPos.vec get() = Vec3(x.toDouble(), y.toDouble(), z.toDouble())
@@ -151,19 +151,19 @@ object Events {
         val g = color.green / 255.0f
         val b = color.blue / 255.0f
         val a = 1.0f
-        val positionMat = matrices.last().positionMatrix
+        val positionMat = matrices.last().pose()
         val normMat = matrices.last()
-        vertexConsumer.addVertex(positionMat, x1, y1, z1).color(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
-        vertexConsumer.addVertex(positionMat, x2, y1, z1).color(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
-        vertexConsumer.addVertex(positionMat, x1, y1, z1).color(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, 1.0f)
-        vertexConsumer.addVertex(positionMat, x1, y1, z2).color(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, 1.0f)
-        vertexConsumer.addVertex(positionMat, x1, y1, z2).color(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
-        vertexConsumer.addVertex(positionMat, x2, y1, z2).color(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
-        vertexConsumer.addVertex(positionMat, x2, y1, z2).color(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, -1.0f)
-        vertexConsumer.addVertex(positionMat, x2, y1, z1).color(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, -1.0f)
+        vertexConsumer.addVertex(positionMat, x1, y1, z1).setColor(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
+        vertexConsumer.addVertex(positionMat, x2, y1, z1).setColor(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
+        vertexConsumer.addVertex(positionMat, x1, y1, z1).setColor(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, 1.0f)
+        vertexConsumer.addVertex(positionMat, x1, y1, z2).setColor(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, 1.0f)
+        vertexConsumer.addVertex(positionMat, x1, y1, z2).setColor(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
+        vertexConsumer.addVertex(positionMat, x2, y1, z2).setColor(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
+        vertexConsumer.addVertex(positionMat, x2, y1, z2).setColor(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, -1.0f)
+        vertexConsumer.addVertex(positionMat, x2, y1, z1).setColor(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, -1.0f)
     }
 
-    fun onGameMenuScreenInitWidgets(adder: GridLayout.Adder) {
+    fun onGameMenuScreenInitWidgets(adder: GridLayout.RowHelper) {
         val widget = if (capturing) {
             val label = translateHighlight("worldtools.gui.escape.button.finish_download", currentLevelName)
             Button.builder(label) {
@@ -176,7 +176,7 @@ object Events {
             }.width(204).build()
         }
 
-        adder.add(widget, 2)
+        adder.addChild(widget, 2)
     }
 
     fun onScreenRemoved(screen: Screen) {
@@ -201,9 +201,9 @@ object Events {
             //  need to find a reliable way to determine it
             //  if chunk is loaded, remove the entity? -> doesn't seem to work because server will remove entity before chunk is unloaded
             mc.player?.let { player ->
-                if (entity.pos.manhattanDistance2d(player.pos) < 32) { // todo: configurable distance, this should be small enough to be safe for most cases
+                if (entity.blockPosition().distManhattan(player.blockPosition()) < 32) { // todo: configurable distance, this should be small enough to be safe for most cases
                     val cacheable = EntityCacheable(entity)
-                    HotCache.entities[entity.chunkPosition]?.remove(cacheable)
+                    HotCache.entities[entity.chunkPosition()]?.remove(cacheable)
                 }
             }
         }

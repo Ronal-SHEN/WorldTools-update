@@ -27,31 +27,31 @@ object MessageManager {
             Component.literal("ools")
         )
     private val converted by lazy {
-        Component.literal("[").append(brand).append(Component.of("] "))
+        Component.literal("[").append(brand).append(Component.literal("] "))
     }
     private val fullBrand: MutableComponent
         get() = converted.copy()
 
     fun String.info() =
-        Component.of(this).sendInfo()
+        Component.literal(this).sendInfo()
 
     fun sendInfo(translateKey: String, vararg args: Any) = translateHighlight(translateKey, *args).sendInfo()
 
     fun sendError(translateKey: String, vararg args: Any) = Component.translatable(translateKey, *args).sendError()
 
     fun Component.infoToast() {
-        SystemToast.create(
+        SystemToast.multiline(
             mc,
-            SystemToast.Type.WORLD_BACKUP,
+            SystemToast.SystemToastId.WORLD_BACKUP,
             brand,
             this
         ).addToast()
     }
 
     private fun Component.errorToast() {
-        SystemToast.create(
+        SystemToast.multiline(
             mc,
-            SystemToast.Type.WORLD_ACCESS_FAILURE,
+            SystemToast.SystemToastId.WORLD_ACCESS_FAILURE,
             brand,
             this
         ).addToast()
@@ -74,7 +74,7 @@ object MessageManager {
         if (!config.advanced.showChatMessages) return
 
         mc.execute {
-            mc.inGameHud.chatHud.addMessage(this)
+            mc.gui.chat.addMessage(this)
         }
     }
 
@@ -82,7 +82,7 @@ object MessageManager {
         if (!config.advanced.showToasts) return
 
         mc.execute {
-            mc.toastManager.add(this)
+            mc.toastManager.addToast(this)
         }
     }
 
@@ -94,12 +94,12 @@ object MessageManager {
                     element
                 } else {
                     element.copy().withStyle { style ->
-                        style.setColor(secondaryColor)
+                        style.withColor(secondaryColor)
                     }
                 }
             } else {
                 Component.literal(element.toString()).withStyle { style ->
-                    style.setColor(secondaryColor)
+                    style.withColor(secondaryColor)
                 }
             }
         }.toTypedArray().let {

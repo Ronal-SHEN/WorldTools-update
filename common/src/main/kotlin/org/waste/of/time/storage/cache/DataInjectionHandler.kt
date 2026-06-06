@@ -40,13 +40,13 @@ object DataInjectionHandler {
 
     private fun ContainerEntity.dataToVehicle(screen: ContainerScreen) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
+            setItem(it.containerSlot, it.item)
         }
     }
 
     private fun MinecartHopper.dataToHopperMinecart(screen: HopperScreen) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
+            setItem(it.containerSlot, it.item)
         }
     }
 
@@ -106,92 +106,92 @@ object DataInjectionHandler {
     private fun dataToEnderChest(screen: ContainerScreen) {
         if (mc.isLocalServer) return
         val inventory = screen.menu.container as? SimpleContainer ?: return
-        if (inventory.size() != 27) return
+        if (inventory.containerSize != 27) return
         mc.player?.enderChestInventory = PlayerEnderChestContainer().apply {
-            repeat(inventory.size()) { i ->
-                setItem(i, inventory.getStack(i))
+            repeat(inventory.containerSize) { i ->
+                setItem(i, inventory.getItem(i))
             }
         }
     }
 
     private fun AbstractFurnaceBlockEntity.dataToFurnace(screen: AbstractFurnaceScreen<*>) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
+            setItem(it.containerSlot, it.item)
         }
     }
 
     private fun BarrelBlockEntity.dataToBarrelBlock(screen: ContainerScreen) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
+            setItem(it.containerSlot, it.item)
         }
     }
 
     private fun BrewingStandBlockEntity.dataToBrewingStand(screen: BrewingStandScreen) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
+            setItem(it.containerSlot, it.item)
         }
     }
 
     private fun ChestBlockEntity.dataToChest(screen: ContainerScreen) {
-        val facing = blockState[ChestBlock.FACING] ?: return
-        val chestType = blockState[ChestBlock.TYPE] ?: return
+        val facing = blockState.getValue(ChestBlock.FACING) ?: return
+        val chestType = blockState.getValue(ChestBlock.TYPE) ?: return
         val containerSlots = screen.getContainerSlots()
-        val inventories = containerSlots.partition { it.slot < 27 }
+        val inventories = containerSlots.partition { it.containerSlot < 27 }
 
         when (chestType) {
             ChestType.SINGLE -> {
                 containerSlots.forEach {
-                    setItem(it.slot, it.item)
+                    setItem(it.containerSlot, it.item)
                 }
             }
 
             ChestType.LEFT -> {
-                val pos = pos.relative(facing.clockWise)
+                val pos = blockPos.relative(facing.clockWise)
                 val otherChest = level?.getBlockEntity(pos)
                 if (otherChest !is ChestBlockEntity) return
 
                 inventories.first.forEach {
-                    otherChest.setItem(it.slot, it.item)
+                    otherChest.setItem(it.containerSlot, it.item)
                 }
                 inventories.second.forEach {
-                    setItem(it.slot - 27, it.item)
+                    setItem(it.containerSlot - 27, it.item)
                 }
 
-                scannedBlockEntities[otherChest.pos] = otherChest
+                scannedBlockEntities[otherChest.blockPos] = otherChest
             }
 
             ChestType.RIGHT -> {
-                val pos = pos.relative(facing.counterClockWise)
+                val pos = blockPos.relative(facing.counterClockWise)
                 val otherChest = level?.getBlockEntity(pos)
                 if (otherChest !is ChestBlockEntity) return
 
                 inventories.first.forEach {
-                    setItem(it.slot, it.item)
+                    setItem(it.containerSlot, it.item)
                 }
                 inventories.second.forEach {
-                    otherChest.setItem(it.slot - 27, it.item)
+                    otherChest.setItem(it.containerSlot - 27, it.item)
                 }
 
-                scannedBlockEntities[otherChest.pos] = otherChest
+                scannedBlockEntities[otherChest.blockPos] = otherChest
             }
         }
     }
 
     private fun DispenserBlockEntity.dataToDispenserOrDropper(screen: DispenserScreen) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
+            setItem(it.containerSlot, it.item)
         }
     }
 
     private fun HopperBlockEntity.dataToHopper(screen: HopperScreen) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
+            setItem(it.containerSlot, it.item)
         }
     }
 
     private fun ShulkerBoxBlockEntity.dataToShulkerBox(screen: ShulkerBoxScreen) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
+            setItem(it.containerSlot, it.item)
         }
     }
 
@@ -201,8 +201,8 @@ object DataInjectionHandler {
 
     private fun CrafterBlockEntity.dataToCrafter(screen: CrafterScreen) {
         screen.getContainerSlots().forEach {
-            setItem(it.slot, it.item)
-            setSlotState(it.slot, !isSlotDisabled(it.slot))
+            setItem(it.containerSlot, it.item)
+            setSlotState(it.containerSlot, !isSlotDisabled(it.containerSlot))
         }
     }
 
