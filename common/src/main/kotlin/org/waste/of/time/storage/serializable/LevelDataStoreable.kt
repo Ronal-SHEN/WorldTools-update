@@ -4,9 +4,9 @@ import org.waste.of.time.Utils.saveToCompound
 
 import net.minecraft.SharedConstants
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.Util
+import net.minecraft.util.Util
 import net.minecraft.world.level.storage.LevelResource
-import net.minecraft.world.level.GameRules
+import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils.toByte
 import org.waste.of.time.WorldTools.DAT_EXTENSION
@@ -133,11 +133,11 @@ class LevelDataStoreable : Storeable() {
         putBoolean("DifficultyLocked", false) // not sure
 
         // ToDo: Seems that the client side game rules were removed. Now only works for single player :/
-        val rules = player.level()?.server?.gameRules?.genGameRules() ?: CompoundTag()
-        put("GameRules", rules)
+        // GameRules serialization was rewritten (codec-based) in 1.21.11; game-rule capture is currently disabled
+        put("GameRules", CompoundTag())
         put("Player", player.saveToCompound().apply {
             remove("LastDeathLocation") // can contain sensitive information
-            putString("Dimension", "minecraft:${player.level().dimension().location().path}")
+            putString("Dimension", "minecraft:${player.level().dimension().identifier().path}")
         })
 
         put("DragonFight", CompoundTag()) // not sure
@@ -149,21 +149,6 @@ class LevelDataStoreable : Storeable() {
         // skip wandering trader id
     }
 
-    private fun GameRules.genGameRules() = createTag().apply {
-        val setting = config.world.gameRules
-        if (!setting.modifyGameRules) return@apply
-
-        putString(GameRules.RULE_DO_WARDEN_SPAWNING.id, setting.doWardenSpawning.toString())
-        putString(GameRules.RULE_DOFIRETICK.id, setting.doFireTick.toString())
-        putString(GameRules.RULE_DO_VINES_SPREAD.id, setting.doVinesSpread.toString())
-        putString(GameRules.RULE_DOMOBSPAWNING.id, setting.doMobSpawning.toString())
-        putString(GameRules.RULE_DAYLIGHT.id, setting.doDaylightCycle.toString())
-        putString(GameRules.RULE_KEEPINVENTORY.id, setting.keepInventory.toString())
-        putString(GameRules.RULE_MOBGRIEFING.id, setting.doMobGriefing.toString())
-        putString(GameRules.RULE_DO_TRADER_SPAWNING.id, setting.doTraderSpawning.toString())
-        putString(GameRules.RULE_DO_PATROL_SPAWNING.id, setting.doPatrolSpawning.toString())
-        putString(GameRules.RULE_WEATHER_CYCLE.id, setting.doWeatherCycle.toString())
-    }
 
     private fun generatorMockNbt() = CompoundTag().apply {
         putByte("bonus_chest", config.world.worldGenerator.bonusChest.toByte())
@@ -172,10 +157,10 @@ class LevelDataStoreable : Storeable() {
 
         put("dimensions", CompoundTag().apply {
             CaptureManager.lastWorldKeys.forEach { key ->
-                put("minecraft:${key.location().path}", CompoundTag().apply {
-                    put("generator", generateGenerator(key.location().path))
+                put("minecraft:${key.identifier().path}", CompoundTag().apply {
+                    put("generator", generateGenerator(key.identifier().path))
 
-                    when (key.location().path) {
+                    when (key.identifier().path) {
                         "the_nether" -> {
                             putString("type", "minecraft:the_nether")
                         }

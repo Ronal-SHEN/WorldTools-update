@@ -22,12 +22,12 @@ class BlockEntityLoadable(
     override val verboseInfo = translateHighlight(
         "worldtools.capture.loaded.block_entities",
         chunk.pos,
-        chunk.level.dimension().location().path
+        chunk.level.dimension().identifier().path
     )
 
     override val anonymizedInfo = translateHighlight(
         "worldtools.capture.loaded.block_entities.anonymized",
-        chunk.level.dimension().location().path
+        chunk.level.dimension().identifier().path
     )
 
     fun load(

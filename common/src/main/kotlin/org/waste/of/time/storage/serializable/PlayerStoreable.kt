@@ -5,7 +5,7 @@ import org.waste.of.time.Utils.saveToCompound
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtIo
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.Util
+import net.minecraft.util.Util
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils.asString
@@ -31,14 +31,14 @@ data class PlayerStoreable(
             "worldtools.capture.saved.player",
             player.name,
             "${player.blockX}, ${player.blockY}, ${player.blockZ}",
-            player.level().dimension().location().path
+            player.level().dimension().identifier().path
         )
 
     override val anonymizedInfo: MutableComponent
         get() = translateHighlight(
             "worldtools.capture.saved.player.anonymized",
             player.name,
-            player.level().dimension().location().path
+            player.level().dimension().identifier().path
         )
 
     override fun cache() {
@@ -52,7 +52,7 @@ data class PlayerStoreable(
     override fun store(session: LevelStorageAccess, cachedStorages: MutableMap<String, CustomRegionBasedStorage>) {
         savePlayerData(player, session)
         StatisticManager.players++
-        StatisticManager.dimensions.add(player.level().dimension().location().path)
+        StatisticManager.dimensions.add(player.level().dimension().identifier().path)
     }
 
     private fun savePlayerData(player: Player, session: LevelStorageAccess) {

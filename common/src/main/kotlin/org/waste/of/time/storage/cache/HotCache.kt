@@ -95,7 +95,7 @@ object HotCache {
             loadedBlockEntities.remove(blockPos)
         }
 
-        level?.dimension()?.location()?.path?.let {
+        level?.dimension()?.identifier()?.path?.let {
             StatisticManager.dimensions.add(it)
         }
         if (config.debug.logSavedContainers) {

@@ -3,7 +3,7 @@ package org.waste.of.time.storage.serializable
 import com.google.gson.JsonObject
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.FileUtil
+import net.minecraft.util.FileUtil
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.manager.MessageManager.translateHighlight

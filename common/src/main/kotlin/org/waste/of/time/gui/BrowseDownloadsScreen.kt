@@ -25,7 +25,7 @@ object BrowseDownloadsScreen : Screen(Component.translatable("worldtools.gui.bro
 
     class WorldDownloadEntry : ObjectSelectionList.Entry<WorldDownloadEntry>() {
         override fun renderContent(
-            context: GuiGraphics?,
+            context: GuiGraphics,
             mouseX: Int,
             mouseY: Int,
             hovered: Boolean,

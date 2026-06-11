@@ -7,8 +7,8 @@ import net.minecraft.nbt.NbtIo
 import net.minecraft.util.ProblemReporter
 import net.minecraft.world.level.storage.TagValueInput
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.FileUtil
+import net.minecraft.resources.Identifier
+import net.minecraft.util.FileUtil
 import net.minecraft.util.ExceptionCollector
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
@@ -74,7 +74,7 @@ open class CustomRegionBasedStorage internal constructor(
             ?.filterIsInstance<CompoundTag>()
             ?.mapNotNull { compoundTag ->
                 val blockPos = BlockPos(compoundTag.getIntOr("x", 0), compoundTag.getIntOr("y", 0), compoundTag.getIntOr("z", 0))
-                val blockStateIdentifier = ResourceLocation.parse(compoundTag.getStringOr("id", ""))
+                val blockStateIdentifier = Identifier.parse(compoundTag.getStringOr("id", ""))
                 val world = mc.level ?: return@mapNotNull null
 
                 runCatching {

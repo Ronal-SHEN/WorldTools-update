@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.layouts.GridLayout
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.minecraft.client.renderer.MultiBufferSource
 import com.mojang.blaze3d.vertex.PoseStack
@@ -119,7 +119,7 @@ object Events {
     ) {
         if (!capturing || !config.render.renderNotYetCachedContainers) return
 
-        val vertexConsumer = vertexConsumers.getBuffer(RenderType.lines()) ?: return
+        val vertexConsumer = vertexConsumers.getBuffer(RenderTypes.lines()) ?: return
 
         HotCache.unscannedBlockEntities
             .forEach { render(it.blockPos.vec, cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.render.unscannedContainerColor)) }

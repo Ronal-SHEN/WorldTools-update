@@ -5,7 +5,7 @@ import com.mojang.serialization.JsonOps
 import net.minecraft.server.PlayerAdvancements
 import net.minecraft.util.datafix.DataFixTypes
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.FileUtil
+import net.minecraft.util.FileUtil
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource
 import org.waste.of.time.WorldTools.CURRENT_VERSION

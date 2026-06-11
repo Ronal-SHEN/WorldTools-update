@@ -12,7 +12,7 @@ abstract class RegionBased(
     val world: Level,
     private val suffix: String
 ) : Storeable() {
-    val dimension: String = world.dimension().location().path
+    val dimension: String = world.dimension().identifier().path
 
     private val dimensionPath
         get() = when (dimension) {

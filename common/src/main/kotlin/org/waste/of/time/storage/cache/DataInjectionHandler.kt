@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.state.properties.ChestType
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Inventory
-import net.minecraft.world.entity.vehicle.MinecartHopper
+import net.minecraft.world.entity.vehicle.minecart.MinecartHopper
 import net.minecraft.world.entity.vehicle.ContainerEntity
 import net.minecraft.world.inventory.PlayerEnderChestContainer
 import net.minecraft.world.SimpleContainer

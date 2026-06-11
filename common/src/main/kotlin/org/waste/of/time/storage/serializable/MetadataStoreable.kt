@@ -2,7 +2,7 @@ package org.waste.of.time.storage.serializable
 
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.FileUtil
+import net.minecraft.util.FileUtil
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils
@@ -70,7 +70,7 @@ class MetadataStoreable : Storeable() {
         mc.connection?.levels()?.let { keys ->
             if (keys.isEmpty()) return@let
             resolve("Dimension Tree.txt").toFile()
-                .writeText(PathTreeNode.buildTree(keys.map { it.location().path }))
+                .writeText(PathTreeNode.buildTree(keys.map { it.identifier().path }))
             LOG.info("Saved ${keys.size} dimensions in tree.")
         }
     }
