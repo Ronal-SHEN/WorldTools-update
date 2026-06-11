@@ -30,9 +30,9 @@ val common: Configuration by configurations.creating {
 dependencies {
     neoForge("net.neoforged:neoforge:${project.properties["neoforge_version"]!!}")
     implementation("thedarkcolour:kotlinforforge-neoforge:${project.properties["kotlin_forge_version"]!!}")
-    common(project(":common", configuration = "namedElements")) { isTransitive = false }
-    shadowCommon(project(path = ":common", configuration = "transformProductionNeoForge")) { isTransitive = false }
-    modApi("me.shedaniel.cloth:cloth-config-neoforge:${project.properties["cloth_config_version"]}")
+    common(project(":common")) { isTransitive = false }
+    shadowCommon(project(":common")) { isTransitive = false }
+    api("me.shedaniel.cloth:cloth-config-neoforge:${project.properties["cloth_config_version"]}")
 }
 
 tasks {

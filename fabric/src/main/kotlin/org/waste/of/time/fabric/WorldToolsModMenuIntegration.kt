@@ -2,7 +2,7 @@ package org.waste.of.time.fabric
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory
 import com.terraformersmc.modmenu.api.ModMenuApi
-import me.shedaniel.autoconfig.AutoConfig
+import me.shedaniel.autoconfig.AutoConfigClient
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.client.gui.screens.Screen
@@ -13,6 +13,6 @@ class WorldToolsModMenuIntegration : ModMenuApi {
 
     override fun getModConfigScreenFactory() =
         ConfigScreenFactory { parent: Screen? ->
-            AutoConfig.getConfigScreen(WorldToolsConfig::class.java, parent).get()
+            AutoConfigClient.getConfigScreen(WorldToolsConfig::class.java, parent).get()
         }
 }

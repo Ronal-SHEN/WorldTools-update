@@ -74,7 +74,7 @@ object MessageManager {
         if (!config.advanced.showChatMessages) return
 
         mc.execute {
-            mc.gui.chat.addMessage(this)
+            mc.gui.chat.addClientSystemMessage(this)
         }
     }
 

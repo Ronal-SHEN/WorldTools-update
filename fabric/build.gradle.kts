@@ -22,13 +22,19 @@ val common: Configuration by configurations.creating {
 }
 
 dependencies {
-    common(project(":common", configuration = "namedElements")) { isTransitive = false }
-    shadowCommon(project(path = ":common", configuration = "transformProductionFabric")) { isTransitive = false }
-    modImplementation("net.fabricmc:fabric-loader:${project.properties["fabric_loader_version"]!!}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.properties["fabric_api_version"]!!}")
-    modImplementation("net.fabricmc:fabric-language-kotlin:${project.properties["fabric_kotlin_version"]!!}")
-    modApi("me.shedaniel.cloth:cloth-config-fabric:${project.properties["cloth_config_version"]}")
-    modApi("com.terraformersmc:modmenu:${project.properties["mod_menu_version"]}")
+    common(project(":common")) { isTransitive = false }
+    shadowCommon(project(":common")) { isTransitive = false }
+    implementation("net.fabricmc:fabric-loader:${project.properties["fabric_loader_version"]!!}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${project.properties["fabric_api_version"]!!}")
+    // loom-no-remap doesn't extract fabric-api's jar-in-jar modules, so depend on the used ones directly
+    implementation("net.fabricmc.fabric-api:fabric-command-api-v2:3.1.0+00cb034633")
+    implementation("net.fabricmc.fabric-api:fabric-key-mapping-api-v1:2.0.5+e2bdee7833")
+    implementation("net.fabricmc.fabric-api:fabric-lifecycle-events-v1:4.1.2+089d615a33")
+    implementation("net.fabricmc.fabric-api:fabric-networking-api-v1:6.3.3+72073ef033")
+    implementation("net.fabricmc.fabric-api:fabric-screen-api-v1:5.0.3+086d547a33")
+    implementation("net.fabricmc:fabric-language-kotlin:${project.properties["fabric_kotlin_version"]!!}")
+    api("me.shedaniel.cloth:cloth-config-fabric:${project.properties["cloth_config_version"]}")
+    api("com.terraformersmc:modmenu:${project.properties["mod_menu_version"]}")
 }
 
 tasks {
@@ -38,9 +44,5 @@ tasks {
             expand(getProperties())
             expand(mutableMapOf("version" to project.version))
         }
-    }
-
-    remapJar {
-        injectAccessWidener.set(true)
     }
 }

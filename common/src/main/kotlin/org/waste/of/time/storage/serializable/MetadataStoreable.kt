@@ -145,9 +145,6 @@ class MetadataStoreable : Storeable() {
             appendLine("- **Version**: `${mc.singleplayerServer?.serverVersion}`")
         }
 
-        mc.connection?.id?.let { id ->
-            appendLine("- **LevelStorageAccess ID**: `$id`")
-        }
 
         appendLine()
         appendLine(CREDIT_MESSAGE_MD)

@@ -37,7 +37,7 @@ open class CustomRegionBasedStorage internal constructor(
 
     @Throws(IOException::class)
     fun getRegionFile(pos: ChunkPos): RegionFile {
-        val longPos = ChunkPos.asLong(pos.regionX, pos.regionZ)
+        val longPos = ChunkPos.pack(pos.regionX, pos.regionZ)
         cachedRegionFiles.getAndMoveToFirst(longPos)?.let { return it }
 
         if (cachedRegionFiles.size >= 256) {

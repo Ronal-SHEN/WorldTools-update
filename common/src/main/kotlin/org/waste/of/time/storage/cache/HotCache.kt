@@ -68,7 +68,7 @@ object HotCache {
      * @return True if the chunk is saved, false otherwise.
      */
     @Suppress("unused")
-    fun isChunkSaved(chunkX: Int, chunkZ: Int) = savedChunks.contains(ChunkPos.asLong(chunkX, chunkZ))
+    fun isChunkSaved(chunkX: Int, chunkZ: Int) = savedChunks.contains(ChunkPos.pack(chunkX, chunkZ))
 
     fun clear() {
         chunks.clear()

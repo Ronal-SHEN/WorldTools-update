@@ -76,7 +76,7 @@ open class RegionBasedChunk(
 
     override fun cache() {
         HotCache.chunks[chunkPos] = this
-        HotCache.savedChunks.add(chunkPos.toLong())
+        HotCache.savedChunks.add(chunkPos.pack())
     }
 
     override fun flush() {

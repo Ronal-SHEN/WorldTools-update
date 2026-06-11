@@ -3,6 +3,7 @@ import net.minecraft.client.gui.components.*
 import net.minecraft.client.gui.layouts.*
 
 import me.shedaniel.autoconfig.AutoConfig
+import me.shedaniel.autoconfig.AutoConfigClient
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 import org.waste.of.time.WorldTools.MAX_LEVEL_NAME_LENGTH
@@ -75,7 +76,7 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
         val bottomGridWidget = createGridWidget()
         val bottomAdder = bottomGridWidget.createRowHelper(2)
         configButton = createButton("worldtools.gui.manager.button.config") {
-            minecraft?.setScreen(AutoConfig.getConfigScreen(WorldToolsConfig::class.java, this).get())
+            minecraft?.setScreen(AutoConfigClient.getConfigScreen(WorldToolsConfig::class.java, this).get())
         }
         cancelButton = createButton("worldtools.gui.manager.button.cancel") {
             minecraft?.setScreen(null)
