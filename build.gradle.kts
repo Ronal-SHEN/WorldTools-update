@@ -2,10 +2,10 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-    kotlin("jvm") version ("2.1.0")
+    kotlin("jvm") version ("2.3.21")
     id("architectury-plugin") version "3.4-SNAPSHOT"
-    id("dev.architectury.loom") version "1.14-SNAPSHOT" apply false
-    id("com.github.johnrengelman.shadow") version "8.1.1" apply false
+    id("dev.architectury.loom") version "1.17-SNAPSHOT" apply false
+    id("com.gradleup.shadow") version "9.4.2" apply false
 }
 
 architectury {
@@ -19,7 +19,7 @@ subprojects {
         "mappings"(project.extensions.getByType(net.fabricmc.loom.api.LoomGradleExtensionAPI::class.java).officialMojangMappings())
     }
     if (path != ":common") {
-        apply(plugin = "com.github.johnrengelman.shadow")
+        apply(plugin = "com.gradleup.shadow")
 
         val shadowCommon by configurations.creating {
             isCanBeConsumed = false
@@ -72,9 +72,9 @@ allprojects {
         maven("https://maven.terraformersmc.com/releases/")
     }
 
-    tasks {
-        compileKotlin {
-            kotlinOptions.jvmTarget = "21"
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java) {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         }
     }
 

@@ -19,14 +19,14 @@ config = "worldtools.mixins.common.json"
 [[dependencies.worldtools]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.11,)"
+versionRange = "[26.1,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.worldtools]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.11,1.22)"
+versionRange = "[26.1,)"
 ordering = "NONE"
 side = "CLIENT"
 
