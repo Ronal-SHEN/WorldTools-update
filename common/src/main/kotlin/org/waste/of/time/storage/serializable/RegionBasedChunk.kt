@@ -19,6 +19,7 @@ import net.minecraft.world.level.LightLayer
 import net.minecraft.world.level.biome.Biomes
 import net.minecraft.world.level.levelgen.BelowZeroRetrogen
 import net.minecraft.world.level.chunk.PalettedContainer
+import net.minecraft.world.level.chunk.Strategy
 import net.minecraft.world.level.chunk.storage.SerializableChunkData
 import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.ticks.SavedTick
@@ -68,9 +69,8 @@ open class RegionBasedChunk(
         )
 
     private val stateIdContainer = PalettedContainer.codecRW(
-        Block.BLOCK_STATE_REGISTRY,
         BlockState.CODEC,
-        PalettedContainer.Strategy.SECTION_STATES,
+        Strategy.createForBlockStates(Block.BLOCK_STATE_REGISTRY),
         Blocks.AIR.defaultBlockState()
     )
 
@@ -160,9 +160,8 @@ open class RegionBasedChunk(
         val biomeRegistry = chunk.level.registryAccess().lookup(Registries.BIOME).orElse(null) ?: return@apply
         val defaultValue = biomeRegistry.get(Biomes.PLAINS).orElse(null) ?: return@apply
         val biomeCodec = PalettedContainer.codecRO(
-            biomeRegistry.asHolderIdMap(),
             biomeRegistry.holderByNameCodec(),
-            PalettedContainer.Strategy.SECTION_BIOMES,
+            Strategy.createForBiomes(biomeRegistry.asHolderIdMap()),
             defaultValue
         )
         val lightingProvider = chunk.level.lightEngine

@@ -7,6 +7,7 @@ import me.shedaniel.autoconfig.serializer.GsonConfigSerializer
 import net.minecraft.SharedConstants
 import net.minecraft.client.Minecraft
 import net.minecraft.client.KeyMapping
+import net.minecraft.resources.ResourceLocation
 import com.mojang.blaze3d.platform.InputConstants
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -27,13 +28,12 @@ object WorldTools {
     val CREDIT_MESSAGE = "This file was created by $MOD_NAME $VERSION ($URL)"
     val CREDIT_MESSAGE_MD = "This file was created by [$MOD_NAME $VERSION]($URL)"
     val LOG: Logger = LogManager.getLogger()
+    private val KEY_CATEGORY = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(MOD_ID, "categories"))
     var CAPTURE_KEY = KeyMapping(
-        "$MOD_ID.key.toggle_capture", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F12,
-        "$MOD_ID.key.categories"
+        "$MOD_ID.key.toggle_capture", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F12, KEY_CATEGORY
     )
     var CONFIG_KEY = KeyMapping(
-        "$MOD_ID.key.open_config", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F10,
-        "$MOD_ID.key.categories"
+        "$MOD_ID.key.open_config", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F10, KEY_CATEGORY
     )
 
     val mc: Minecraft = Minecraft.getInstance()

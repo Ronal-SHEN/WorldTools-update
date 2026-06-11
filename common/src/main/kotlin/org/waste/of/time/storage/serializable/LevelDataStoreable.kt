@@ -97,12 +97,12 @@ class LevelDataStoreable : Storeable() {
             it.profile.id == player.uuid
         }?.let {
             putInt("GameType", it.gameMode.id)
-        } ?: putInt("GameType", player.server?.defaultGameType?.id ?: 0)
+        } ?: putInt("GameType", player.level()?.server?.defaultGameType?.id ?: 0)
 
-        putInt("SpawnX", player.level().levelData.spawnPos.x)
-        putInt("SpawnY", player.level().levelData.spawnPos.y)
-        putInt("SpawnZ", player.level().levelData.spawnPos.z)
-        putFloat("SpawnAngle", player.level().levelData.spawnAngle)
+        putInt("SpawnX", player.level().levelData.respawnData.pos().x)
+        putInt("SpawnY", player.level().levelData.respawnData.pos().y)
+        putInt("SpawnZ", player.level().levelData.respawnData.pos().z)
+        putFloat("SpawnAngle", player.level().levelData.respawnData.yaw())
         putLong("Time", player.level().gameTime)
         putLong("DayTime", player.level().dayTime)
         putLong("LastPlayed", System.currentTimeMillis())
@@ -112,7 +112,7 @@ class LevelDataStoreable : Storeable() {
         putInt("rainTime", 0) // not sure
         putBoolean("raining", player.level().isRaining)
         putBoolean("thundering", player.level().isThundering)
-        putBoolean("hardcore", player.server?.isHardcore ?: false)
+        putBoolean("hardcore", player.level()?.server?.isHardcore ?: false)
         putInt("thunderTime", 0) // not sure
         putBoolean("allowCommands", true) // not sure
         putBoolean("initialized", true) // not sure
@@ -121,9 +121,9 @@ class LevelDataStoreable : Storeable() {
             putDouble("BorderCenterX", border.centerX)
             putDouble("BorderCenterZ", border.centerZ)
             putDouble("BorderSize", border.size)
-            putLong("BorderSizeLerpTime", border.lerpRemainingTime)
+            putLong("BorderSizeLerpTime", border.lerpTime)
             putDouble("BorderSizeLerpTarget", border.lerpTarget)
-            putDouble("BorderSafeZone", border.damageSafeZone)
+            putDouble("BorderSafeZone", border.safeZone)
             putDouble("BorderDamagePerBlock", border.damagePerBlock)
             putDouble("BorderWarningBlocks", border.warningBlocks.toDouble())
             putDouble("BorderWarningTime", border.warningTime.toDouble())
