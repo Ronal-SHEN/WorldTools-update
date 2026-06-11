@@ -1,6 +1,7 @@
 package org.waste.of.time.storage.cache
 
 import net.minecraft.world.entity.Entity
+import org.waste.of.time.Utils.saveToCompound
 import net.minecraft.world.entity.EntityType
 import net.minecraft.nbt.CompoundTag
 import org.waste.of.time.Utils.toByte
@@ -11,10 +12,9 @@ import org.waste.of.time.storage.Cacheable
 data class EntityCacheable(
     val entity: Entity
 ) : Cacheable {
-    fun compound() = CompoundTag().apply {
+    fun compound() = entity.saveToCompound().apply {
         // saveSelfNbt has a check for RemovalReason.DISCARDED
-        EntityType.getKey(entity.type)?.let { putString(Entity.ID_TAG, it.toString()) }
-        entity.saveWithoutId(this)
+        EntityType.getKey(entity.type)?.let { putString("id", it.toString()) }
 
         if (config.entity.behavior.modifyEntityBehavior) {
             putByte("NoAI", config.entity.behavior.noAI.toByte())

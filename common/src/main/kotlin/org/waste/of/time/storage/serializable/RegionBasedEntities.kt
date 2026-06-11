@@ -46,7 +46,7 @@ class RegionBasedEntities(
             }
         })
 
-        putInt("DataVersion", SharedConstants.getCurrentVersion().dataVersion.version)
+        putInt("DataVersion", SharedConstants.getCurrentVersion().dataVersion().version())
         put("Position", IntArrayTag(intArrayOf(chunkPos.x, chunkPos.z)))
         if (config.debug.logSavedEntities) {
             entities.forEach { entity -> LOG.info("Entity saved: $entity (Chunk: $chunkPos)") }

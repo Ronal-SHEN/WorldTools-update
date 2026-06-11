@@ -1,6 +1,7 @@
 package org.waste.of.time.storage.serializable
 
 import net.minecraft.world.entity.player.Player
+import org.waste.of.time.Utils.saveToCompound
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtIo
 import net.minecraft.network.chat.MutableComponent
@@ -60,7 +61,7 @@ data class PlayerStoreable(
             playerDataDir.mkdirs()
 
             val newPlayerFile = File.createTempFile(player.stringUUID + "-", ".dat", playerDataDir).toPath()
-            NbtIo.writeCompressed(player.saveWithoutId(CompoundTag()).apply {
+            NbtIo.writeCompressed(player.saveToCompound().apply {
                 if (config.entity.censor.lastDeathLocation) {
                     remove("LastDeathLocation")
                 }

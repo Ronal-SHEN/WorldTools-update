@@ -2,6 +2,10 @@ package org.waste.of.time
 
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.util.ProblemReporter
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.storage.TagValueOutput
 import net.minecraft.world.phys.Vec3
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -15,6 +19,13 @@ object Utils {
     // Why cant I use the std lib?
     fun Boolean.toByte(): Byte = if (this) 1 else 0
     fun Vec3.asString() = "(%.2f, %.2f, %.2f)".format(x, y, z)
+
+    /** 1.21.6+ serializes entities via ValueOutput; this collects the result into a CompoundTag. */
+    fun Entity.saveToCompound(): CompoundTag {
+        val out = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registryAccess())
+        saveWithoutId(out)
+        return out.buildResult()
+    }
 
     fun getTime(): String {
         val localDateTime = LocalDateTime.now()

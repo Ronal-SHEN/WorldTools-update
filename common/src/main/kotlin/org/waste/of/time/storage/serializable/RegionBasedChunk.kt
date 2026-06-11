@@ -114,7 +114,7 @@ open class RegionBasedChunk(
             putLong(TIMESTAMP_KEY, System.currentTimeMillis())
         }
 
-        putInt("DataVersion", SharedConstants.getCurrentVersion().dataVersion.version)
+        putInt("DataVersion", SharedConstants.getCurrentVersion().dataVersion().version())
         putInt(SerializableChunkData.X_POS_TAG, chunk.pos.x)
         putInt("yPos", chunk.minSectionY)
         putInt(SerializableChunkData.Z_POS_TAG, chunk.pos.z)

@@ -1,5 +1,6 @@
 package org.waste.of.time.storage.serializable
 import net.minecraft.nbt.*
+import org.waste.of.time.Utils.saveToCompound
 
 import net.minecraft.SharedConstants
 import net.minecraft.network.chat.MutableComponent
@@ -83,10 +84,10 @@ class LevelDataStoreable : Storeable() {
         // skip removed features
 
         put("Version", CompoundTag().apply {
-            putString("Name", SharedConstants.getCurrentVersion().name)
-            putInt("Id", SharedConstants.getCurrentVersion().dataVersion.version)
-            putBoolean("Snapshot", !SharedConstants.getCurrentVersion().isStable)
-            putString("Series", SharedConstants.getCurrentVersion().dataVersion.series)
+            putString("Name", SharedConstants.getCurrentVersion().name())
+            putInt("Id", SharedConstants.getCurrentVersion().dataVersion().version())
+            putBoolean("Snapshot", !SharedConstants.getCurrentVersion().stable())
+            putString("Series", SharedConstants.getCurrentVersion().dataVersion().series())
         })
 
         NbtUtils.addCurrentDataVersion(this)
@@ -134,8 +135,7 @@ class LevelDataStoreable : Storeable() {
         // ToDo: Seems that the client side game rules were removed. Now only works for single player :/
         val rules = player.level()?.server?.gameRules?.genGameRules() ?: CompoundTag()
         put("GameRules", rules)
-        put("Player", CompoundTag().apply {
-            player.saveWithoutId(this)
+        put("Player", player.saveToCompound().apply {
             remove("LastDeathLocation") // can contain sensitive information
             putString("Dimension", "minecraft:${player.level().dimension().location().path}")
         })

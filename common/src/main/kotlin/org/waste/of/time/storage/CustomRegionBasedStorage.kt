@@ -4,6 +4,8 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtIo
+import net.minecraft.util.ProblemReporter
+import net.minecraft.world.level.storage.TagValueInput
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.FileUtil
@@ -81,7 +83,7 @@ open class CustomRegionBasedStorage internal constructor(
                         .getOptional(blockStateIdentifier)
                         .orElse(null)
                         ?.create(blockPos, block.defaultBlockState())?.apply {
-                            loadWithComponents(compoundTag, world.registryAccess())
+                            loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), compoundTag))
                         }
                 }.getOrNull()
             } ?: emptyList()
