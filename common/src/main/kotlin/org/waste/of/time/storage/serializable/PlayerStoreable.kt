@@ -8,6 +8,7 @@ import net.minecraft.Util
 import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils.asString
+import org.waste.of.time.Utils.sanitizePlayerForSingleplayer
 import org.waste.of.time.WorldTools
 import org.waste.of.time.WorldTools.config
 import org.waste.of.time.manager.MessageManager.translateHighlight
@@ -63,6 +64,9 @@ data class PlayerStoreable(
             NbtIo.writeCompressed(player.saveWithoutId(CompoundTag()).apply {
                 if (config.entity.censor.lastDeathLocation) {
                     remove("LastDeathLocation")
+                }
+                if (config.world.playerBehavior.modifyPlayerBehavior) {
+                    sanitizePlayerForSingleplayer()
                 }
             }, newPlayerFile)
             val currentFile = File(playerDataDir, player.stringUUID + ".dat").toPath()
