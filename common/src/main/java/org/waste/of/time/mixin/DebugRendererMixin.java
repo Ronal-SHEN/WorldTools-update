@@ -20,6 +20,7 @@ public class DebugRendererMixin {
             double cameraX,
             double cameraY,
             double cameraZ,
+            boolean renderBlockOutline,
             CallbackInfo ci
     ) {
         Events.INSTANCE.onDebugRenderStart(matrices, vertexConsumers, cameraX, cameraY, cameraZ);
