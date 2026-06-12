@@ -73,6 +73,9 @@ class WorldToolsConfig : ConfigData {
         val gameRules = GameRules()
 
         @CollapsibleObject(startExpanded = true)
+        val playerBehavior = PlayerBehavior()
+
+        @CollapsibleObject(startExpanded = true)
         val metadata = Metadata()
 
         @CollapsibleObject(startExpanded = true)
@@ -107,6 +110,11 @@ class WorldToolsConfig : ConfigData {
             var doMobGriefing = false
             var doTraderSpawning = false
             var doPatrolSpawning = false
+        }
+
+        class PlayerBehavior {
+            @Tooltip
+            var modifyPlayerBehavior = true
         }
 
         class Metadata {
