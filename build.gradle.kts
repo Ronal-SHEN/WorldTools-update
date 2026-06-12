@@ -25,7 +25,11 @@ subprojects {
             isCanBeConsumed = false
             isCanBeResolved = true
         }
-        val versionWithMCVersion = "${project.properties["mod_version"]!!}+${project.properties["minecraft_version"]!!}"
+        // Use the version range (if set) for the jar file name so a multi-version
+        // branch produces a single jar, e.g. WorldTools-fabric-1.3+1.21.6-1.21.8.jar
+        val mcVersionLabel = (project.properties["minecraft_version_range"]
+            ?: project.properties["minecraft_version"]!!) as String
+        val versionWithMCVersion = "${project.properties["mod_version"]!!}+$mcVersionLabel"
 
         tasks.withType<JavaCompile> {
             options.encoding = "UTF-8"
