@@ -24,6 +24,7 @@ import org.waste.of.time.storage.CustomRegionBasedStorage
 import org.waste.of.time.storage.Storeable
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
 
 class LevelDataStoreable : Storeable() {
     override fun shouldStore() = config.general.capture.levelData
@@ -64,6 +65,36 @@ class LevelDataStoreable : Storeable() {
             MessageManager.sendError(
                 "worldtools.log.error.failed_to_save_level",
                 resultingFile.path,
+                exception.localizedMessage
+            )
+        }
+
+        storeWorldGenSettings(session)
+    }
+
+    /**
+     * Since 26.1, world gen settings are no longer read from level.dat's (now legacy)
+     * "WorldGenSettings" tag; vanilla loads them from a standalone SavedData file
+     * (see [net.minecraft.world.level.storage.LevelStorageSource.getLevelDataAndDimensions]
+     * reading [net.minecraft.world.level.levelgen.WorldGenSettings.TYPE]). Without it the
+     * game falls back to default settings and crashes with "Overworld settings missing" for
+     * captured worlds that expose no overworld. Write it as the standard SavedData wrapper
+     * (`{ data: <WorldGenSettings>, DataVersion: <current> }`) at data/minecraft/world_gen_settings.dat.
+     */
+    private fun storeWorldGenSettings(session: LevelStorageAccess) {
+        val target = session.getLevelPath(LevelResource.ROOT)
+            .resolve("data").resolve("minecraft").resolve("world_gen_settings${DAT_EXTENSION}")
+        val wrapper = CompoundTag().apply {
+            put("data", generatorMockNbt())
+            NbtUtils.addCurrentDataVersion(this)
+        }
+        try {
+            Files.createDirectories(target.parent)
+            NbtIo.writeCompressed(wrapper, target)
+        } catch (exception: IOException) {
+            MessageManager.sendError(
+                "worldtools.log.error.failed_to_save_level",
+                target.toString(),
                 exception.localizedMessage
             )
         }
