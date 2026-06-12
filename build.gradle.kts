@@ -24,7 +24,8 @@ subprojects {
             isCanBeConsumed = false
             isCanBeResolved = true
         }
-        val versionWithMCVersion = "${project.properties["mod_version"]!!}+${project.properties["minecraft_version"]!!}"
+        val mcDisplayVersion = (project.properties["mc_display_version"] ?: project.properties["minecraft_version"])!!
+        val versionWithMCVersion = "${project.properties["mod_version"]!!}+$mcDisplayVersion"
 
         tasks.withType<JavaCompile> {
             options.encoding = "UTF-8"
