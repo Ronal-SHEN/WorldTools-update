@@ -136,6 +136,17 @@ class LevelDataStoreable : Storeable() {
         putInt("SpawnY", player.level().levelData.respawnData.pos().y)
         putInt("SpawnZ", player.level().levelData.respawnData.pos().z)
         putFloat("SpawnAngle", player.level().levelData.respawnData.yaw())
+
+        // Since 26.1 the world spawn is read from a "spawn" compound, not the legacy
+        // SpawnX/Y/Z fields (which are now ignored, leaving spawn at overworld 0,0,0 -> the
+        // void on custom-dimension servers). Anchor it to the captured player's position and
+        // dimension so respawns land on the actual build rather than an empty overworld.
+        put("spawn", CompoundTag().apply {
+            put("pos", IntArrayTag(intArrayOf(player.blockX, player.blockY, player.blockZ)))
+            putFloat("yaw", player.yRot)
+            putFloat("pitch", player.xRot)
+            putString("dimension", "minecraft:${player.level().dimension().identifier().path}")
+        })
         putLong("Time", player.level().gameTime)
         putLong("DayTime", player.level().defaultClockTime)
         putLong("LastPlayed", System.currentTimeMillis())

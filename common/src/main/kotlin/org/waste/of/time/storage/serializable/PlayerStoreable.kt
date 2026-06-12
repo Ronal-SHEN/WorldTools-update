@@ -63,6 +63,12 @@ data class PlayerStoreable(
 
             val newPlayerFile = File.createTempFile(player.stringUUID + "-", ".dat", playerDataDir).toPath()
             NbtIo.writeCompressed(player.saveToCompound().apply {
+                // The vanilla entity save omits the Dimension tag (it is normally written by
+                // the server's player-save wrapper). In single-player the integrated server
+                // loads the player from playerdata/<uuid>.dat in preference to level.dat's
+                // Player tag, so without a Dimension here the player is dropped into the
+                // default (often empty) overworld instead of their captured dimension.
+                putString("Dimension", "minecraft:${player.level().dimension().identifier().path}")
                 if (config.entity.censor.lastDeathLocation) {
                     remove("LastDeathLocation")
                 }
