@@ -156,11 +156,21 @@ class LevelDataStoreable : Storeable() {
         putByte("generate_features", config.world.worldGenerator.generateFeatures.toByte())
 
         put("dimensions", CompoundTag().apply {
-            CaptureManager.lastWorldKeys.forEach { key ->
-                put("minecraft:${key.identifier().path}", CompoundTag().apply {
-                    put("generator", generateGenerator(key.identifier().path))
+            // Vanilla's WorldDimensions codec requires a minecraft:overworld entry,
+            // otherwise loading the world crashes with "Overworld settings missing".
+            // Servers that only expose custom dimensions (e.g. play.hollowcube.net)
+            // don't have an overworld, so relabel the first captured dimension as
+            // the overworld in that case.
+            val keys = CaptureManager.lastWorldKeys
+            val hasOverworld = keys.any { it.identifier().path == "overworld" }
 
-                    when (key.identifier().path) {
+            keys.forEachIndexed { index, key ->
+                val path = if (!hasOverworld && index == 0) "overworld" else key.identifier().path
+
+                put("minecraft:$path", CompoundTag().apply {
+                    put("generator", generateGenerator(path))
+
+                    when (path) {
                         "the_nether" -> {
                             putString("type", "minecraft:the_nether")
                         }
