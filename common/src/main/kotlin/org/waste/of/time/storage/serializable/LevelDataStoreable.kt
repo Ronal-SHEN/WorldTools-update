@@ -9,6 +9,7 @@ import net.minecraft.world.level.storage.LevelResource
 import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.waste.of.time.Utils.toByte
+import org.waste.of.time.Utils.sanitizePlayerForSingleplayer
 import org.waste.of.time.WorldTools.DAT_EXTENSION
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.config
@@ -139,6 +140,9 @@ class LevelDataStoreable : Storeable() {
         put("Player", player.saveToCompound().apply {
             remove("LastDeathLocation") // can contain sensitive information
             putString("Dimension", "minecraft:${player.level().dimension().location().path}")
+            if (config.world.playerBehavior.modifyPlayerBehavior) {
+                sanitizePlayerForSingleplayer()
+            }
         })
 
         put("DragonFight", CompoundTag()) // not sure

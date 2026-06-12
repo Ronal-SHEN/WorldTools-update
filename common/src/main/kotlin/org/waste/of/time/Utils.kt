@@ -27,6 +27,19 @@ object Utils {
         return out.buildResult()
     }
 
+    /**
+     * Servers may hand out locked player state (e.g. flySpeed 0, mayBuild false, a
+     * spectator/adventure game type) that makes a downloaded world unusable in other
+     * game modes in singleplayer - flying in creative is impossible with flySpeed 0.
+     * Strip these so the world's default game type and the vanilla per-game-mode
+     * ability defaults apply on load.
+     */
+    fun CompoundTag.sanitizePlayerForSingleplayer(): CompoundTag = apply {
+        remove("abilities")
+        remove("playerGameType")
+        remove("previousPlayerGameType")
+    }
+
     fun getTime(): String {
         val localDateTime = LocalDateTime.now()
         val zoneId = ZoneId.systemDefault()
