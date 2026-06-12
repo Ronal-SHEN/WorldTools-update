@@ -23,7 +23,7 @@ public class BossBarHudMixin {
 
     // todo: remove redirects to avoid mod conflicts
     //  either replace them with injects or use MixinExtras
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"))
+    @Redirect(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"))
     public Collection<LerpingBossEvent> modifyValues(Map<UUID, LerpingBossEvent> bossBars) {
         if (!CaptureManager.INSTANCE.getCapturing()) return bossBars.values();
         List<LerpingBossEvent> newBossBars = new ArrayList<>(bossBars.size() + 2);
@@ -33,7 +33,7 @@ public class BossBarHudMixin {
         return newBossBars;
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Ljava/util/Map;isEmpty()Z"))
+    @Redirect(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/util/Map;isEmpty()Z"))
     public boolean modifyIsEmpty(Map<UUID, LerpingBossEvent> bossBars) {
         if (!CaptureManager.INSTANCE.getCapturing()) return bossBars.isEmpty();
         return bossBars.isEmpty()

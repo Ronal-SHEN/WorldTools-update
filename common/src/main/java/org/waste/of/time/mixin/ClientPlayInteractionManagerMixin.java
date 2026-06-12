@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,7 +31,7 @@ public class ClientPlayInteractionManagerMixin {
     }
 
     @Inject(method = "interact", at = @At("HEAD"))
-    public void interactEntityHead(Player player, Entity entity, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
+    public void interactEntityHead(Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         if (minecraft.level == null) return;
         Events.INSTANCE.onInteractEntity(entity);
     }
