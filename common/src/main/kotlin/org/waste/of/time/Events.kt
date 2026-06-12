@@ -4,17 +4,14 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.layouts.GridLayout
-import net.minecraft.client.renderer.rendertype.RenderTypes
-import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.gizmos.Gizmos
+import net.minecraft.gizmos.GizmoStyle
 import net.minecraft.world.level.saveddata.maps.MapId
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.Vec3
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.chunk.LevelChunk
 import org.waste.of.time.Utils.manhattanDistance2d
@@ -37,7 +34,6 @@ import org.waste.of.time.storage.cache.DataInjectionHandler
 import org.waste.of.time.storage.serializable.BlockEntityLoadable
 import org.waste.of.time.storage.serializable.PlayerStoreable
 import org.waste.of.time.storage.serializable.RegionBasedChunk
-import java.awt.Color
 
 object Events {
     fun onChunkLoad(chunk: LevelChunk) {
@@ -110,58 +106,21 @@ object Events {
         HotCache.lastInteractedBlockEntity = null
     }
 
-    fun onDebugRenderStart(
-        matrices: PoseStack,
-        vertexConsumers: MultiBufferSource.BufferSource,
-        cameraX: Double,
-        cameraY: Double,
-        cameraZ: Double
-    ) {
+    fun onDebugRenderStart() {
         if (!capturing || !config.render.renderNotYetCachedContainers) return
 
-        val vertexConsumer = vertexConsumers.getBuffer(RenderTypes.lines()) ?: return
-
         HotCache.unscannedBlockEntities
-            .forEach { render(it.blockPos.vec, cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.render.unscannedContainerColor)) }
+            .forEach { Gizmos.cuboid(it.blockPos, GizmoStyle.stroke(config.render.unscannedContainerColor or ALPHA)) }
 
         HotCache.loadedBlockEntities
-            .forEach { render(it.value.blockPos.vec, cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.render.fromCacheLoadedContainerColor)) }
+            .forEach { Gizmos.cuboid(it.value.blockPos, GizmoStyle.stroke(config.render.fromCacheLoadedContainerColor or ALPHA)) }
 
         HotCache.unscannedEntities
-            .forEach { render(it.entity.position().add(-.5, .0, -.5), cameraX, cameraY, cameraZ, matrices, vertexConsumer, Color(config.render.unscannedEntityColor)) }
+            .forEach { Gizmos.cuboid(it.entity.boundingBox, GizmoStyle.stroke(config.render.unscannedEntityColor or ALPHA)) }
     }
 
-    private val BlockPos.vec get() = Vec3(x.toDouble(), y.toDouble(), z.toDouble())
-
-    private fun render(
-        vec: Vec3,
-        cameraX: Double,
-        cameraY: Double,
-        cameraZ: Double,
-        matrices: PoseStack,
-        vertexConsumer: VertexConsumer,
-        color: Color
-    ) {
-        val x1 = (vec.x - cameraX).toFloat()
-        val y1 = (vec.y - cameraY).toFloat()
-        val z1 = (vec.z - cameraZ).toFloat()
-        val x2 = x1 + 1
-        val z2 = z1 + 1
-        val r = color.red / 255.0f
-        val g = color.green / 255.0f
-        val b = color.blue / 255.0f
-        val a = 1.0f
-        val positionMat = matrices.last().pose()
-        val normMat = matrices.last()
-        vertexConsumer.addVertex(positionMat, x1, y1, z1).setColor(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
-        vertexConsumer.addVertex(positionMat, x2, y1, z1).setColor(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
-        vertexConsumer.addVertex(positionMat, x1, y1, z1).setColor(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, 1.0f)
-        vertexConsumer.addVertex(positionMat, x1, y1, z2).setColor(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, 1.0f)
-        vertexConsumer.addVertex(positionMat, x1, y1, z2).setColor(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
-        vertexConsumer.addVertex(positionMat, x2, y1, z2).setColor(r, g, b, a).setNormal(normMat, 1.0f, 0.0f, 0.0f)
-        vertexConsumer.addVertex(positionMat, x2, y1, z2).setColor(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, -1.0f)
-        vertexConsumer.addVertex(positionMat, x2, y1, z1).setColor(r, g, b, a).setNormal(normMat, 0.0f, 0.0f, -1.0f)
-    }
+    // config colors are stored as RGB; gizmo styles expect ARGB, so force full opacity
+    private const val ALPHA = 0xFF000000.toInt()
 
     fun onGameMenuScreenInitWidgets(adder: GridLayout.RowHelper) {
         val widget = if (capturing) {
