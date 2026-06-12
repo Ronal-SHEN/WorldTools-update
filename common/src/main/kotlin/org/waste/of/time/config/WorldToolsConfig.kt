@@ -114,7 +114,7 @@ class WorldToolsConfig : ConfigData {
 
         class PlayerBehavior {
             @Tooltip
-            var modifyPlayerBehavior = true
+            var modifyPlayerBehavior = false
         }
 
         class Metadata {
