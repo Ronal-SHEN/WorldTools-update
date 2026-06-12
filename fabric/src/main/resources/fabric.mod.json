@@ -3,7 +3,7 @@
   "id": "worldtools",
   "version": "${version}",
   "name": "WorldTools",
-  "description": "A powerful Minecraft mod that captures high-detail snapshots of server worlds locally.",
+  "description": "An updated fork of the original WorldTools mod.",
   "authors": [
     "Constructor",
     "P529",

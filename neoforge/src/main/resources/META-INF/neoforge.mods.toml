@@ -9,7 +9,7 @@ version = "${version}"
 displayName = "WorldTools"
 authors = "Constructor, P529, rfresh2"
 description = '''
-A powerful Minecraft mod that captures high-detail snapshots of server worlds locally.
+An updated fork of the original WorldTools mod.
 '''
 logoFile = "assets/worldtools/WorldTools.png"
 
