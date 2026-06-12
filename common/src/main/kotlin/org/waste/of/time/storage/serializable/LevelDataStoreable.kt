@@ -17,6 +17,7 @@ import org.waste.of.time.manager.CaptureManager
 import org.waste.of.time.manager.CaptureManager.currentLevelName
 import org.waste.of.time.manager.MessageManager
 import org.waste.of.time.manager.MessageManager.translateHighlight
+import org.waste.of.time.manager.StatisticManager
 import org.waste.of.time.storage.CustomRegionBasedStorage
 import org.waste.of.time.storage.Storeable
 import java.io.File
@@ -171,17 +172,20 @@ class LevelDataStoreable : Storeable() {
         putByte("generate_features", config.world.worldGenerator.generateFeatures.toByte())
 
         put("dimensions", CompoundTag().apply {
-            // Vanilla's WorldDimensions codec requires a minecraft:overworld entry,
-            // otherwise loading the world crashes with "Overworld settings missing".
-            // Servers that only expose custom dimensions (e.g. play.hollowcube.net)
-            // don't have an overworld, so relabel the first captured dimension as
-            // the overworld in that case.
-            val keys = CaptureManager.lastWorldKeys
-            val hasOverworld = keys.any { it.location().path == "overworld" }
+            // Collect every dimension we actually captured. mc.connection.levels()
+            // (lastWorldKeys) is empty on servers with non-standard dimensions
+            // (e.g. play.hollowcube.net), which would leave this registry empty, so
+            // also include the player's current dimension and every dimension we saved
+            // chunks/block entities for.
+            val dimensionPaths = linkedSetOf<String>().apply {
+                addAll(CaptureManager.lastWorldKeys.map { it.location().path })
+                (CaptureManager.lastPlayer ?: mc.player)?.let {
+                    add(it.level().dimension().location().path)
+                }
+                addAll(StatisticManager.dimensions)
+            }
 
-            keys.forEachIndexed { index, key ->
-                val path = if (!hasOverworld && index == 0) "overworld" else key.location().path
-
+            dimensionPaths.forEach { path ->
                 put("minecraft:$path", CompoundTag().apply {
                     put("generator", generateGenerator(path))
 
@@ -196,6 +200,17 @@ class LevelDataStoreable : Storeable() {
                             putString("type", "minecraft:overworld")
                         }
                     }
+                })
+            }
+
+            // Vanilla's WorldDimensions codec requires a minecraft:overworld entry,
+            // otherwise loading crashes with "Overworld settings missing". If the server
+            // had no overworld, add an empty synthetic one so the captured custom
+            // dimensions above still load (the player spawns in their saved dimension).
+            if (dimensionPaths.none { it == "overworld" }) {
+                put("minecraft:overworld", CompoundTag().apply {
+                    put("generator", generateGenerator("overworld"))
+                    putString("type", "minecraft:overworld")
                 })
             }
         })
