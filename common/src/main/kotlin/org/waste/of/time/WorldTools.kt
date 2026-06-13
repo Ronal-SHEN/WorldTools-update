@@ -36,7 +36,7 @@ object WorldTools {
         "$MOD_ID.key.categories"
     )
 
-    val mc: Minecraft = Minecraft.getInstance()
+    val mc: Minecraft get() = Minecraft.getInstance()
     lateinit var config: WorldToolsConfig; private set
 
     fun initialize() {
