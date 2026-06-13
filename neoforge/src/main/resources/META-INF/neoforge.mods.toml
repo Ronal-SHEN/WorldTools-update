@@ -1,15 +1,19 @@
 modLoader = "kotlinforforge"
 loaderVersion = "[5,)"
 license = "GNU General Public License v3.0"
-issueTrackerURL = "https://github.com/Avanatiker/WorldTools/issues"
+issueTrackerURL = "https://github.com/Ronal-SHEN/WorldTools-update/issues"
+
+[[accessTransformers]]
+file = "META-INF/accesstransformer.cfg"
 
 [[mods]]
 modId = "worldtools"
 version = "${version}"
 displayName = "WorldTools"
+displayURL = "https://modrinth.com/mod/worldtools-update"
 authors = "Constructor, P529, rfresh2"
 description = '''
-A powerful Minecraft mod that captures high-detail snapshots of server worlds locally.
+Download a server's world as a detailed singleplayer world. An updated fork of WorldTools.
 '''
 logoFile = "assets/worldtools/WorldTools.png"
 
