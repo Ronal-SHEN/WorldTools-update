@@ -36,7 +36,7 @@ object WorldTools {
         "$MOD_ID.key.open_config", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F10, KEY_CATEGORY
     )
 
-    val mc: Minecraft = Minecraft.getInstance()
+    val mc: Minecraft get() = Minecraft.getInstance()
     lateinit var config: WorldToolsConfig; private set
 
     fun initialize() {
