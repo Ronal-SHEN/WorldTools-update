@@ -56,10 +56,10 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
         }
         downloadButton = createButton("worldtools.gui.manager.button.start_download") {
             if (CaptureManager.capturing) {
-                minecraft?.setScreen(null)
+                minecraft?.gui?.setScreen(null)
                 CaptureManager.stop()
             } else {
-                minecraft?.setScreen(null)
+                minecraft?.gui?.setScreen(null)
                 CaptureManager.start(worldNameTextEntryWidget.value)
             }
         }
@@ -76,10 +76,10 @@ object ManagerScreen : Screen(Component.translatable("worldtools.gui.manager.tit
         val bottomGridWidget = createGridWidget()
         val bottomAdder = bottomGridWidget.createRowHelper(2)
         configButton = createButton("worldtools.gui.manager.button.config") {
-            minecraft?.setScreen(AutoConfigClient.getConfigScreen(WorldToolsConfig::class.java, this).get())
+            minecraft?.setScreenAndShow(AutoConfigClient.getConfigScreen(WorldToolsConfig::class.java, this).get())
         }
         cancelButton = createButton("worldtools.gui.manager.button.cancel") {
-            minecraft?.setScreen(null)
+            minecraft?.gui?.setScreen(null)
         }
 
         bottomAdder.addChild(configButton, 1)

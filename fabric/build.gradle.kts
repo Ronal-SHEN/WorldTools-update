@@ -44,5 +44,16 @@ tasks {
             expand(getProperties())
             expand(mutableMapOf("version" to project.version))
         }
+        // dev runs resolve the access widener inside the fabric mod's own root, so mirror
+        // it out of :common — without it the loader fails with "Missing classTweaker file"
+        from(project(":common").sourceSets["main"].resources.srcDirs) {
+            include("worldtools.accesswidener")
+        }
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+
+    // the same file also arrives via shadowCommon; keep only one copy in the jar
+    shadowJar {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 }

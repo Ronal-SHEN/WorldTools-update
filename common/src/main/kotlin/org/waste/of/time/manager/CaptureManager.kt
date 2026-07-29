@@ -64,10 +64,10 @@ object CaptureManager {
 
         val worldExists = mc.levelSource.baseDir.resolve(potentialName).toFile().exists()
         if (worldExists && !confirmed) {
-            mc.setScreen(ConfirmScreen(
+            mc.setScreenAndShow(ConfirmScreen(
                 { yes ->
                     if (yes) start(potentialName, true)
-                    mc.setScreen(null)
+                    mc.gui.setScreen(null)
                 },
                 Component.translatable("worldtools.gui.capture.existing_world_confirm.title"),
                 Component.translatable("worldtools.gui.capture.existing_world_confirm.message", potentialName)

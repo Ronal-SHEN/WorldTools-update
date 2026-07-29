@@ -15,10 +15,10 @@ class EnterTextField(
     override fun keyPressed(keyEvent: KeyEvent): Boolean {
         if (keyEvent.key() == GLFW.GLFW_KEY_ENTER) {
             if (CaptureManager.capturing) {
-                client?.setScreen(null)
+                client?.gui?.setScreen(null)
                 CaptureManager.stop()
             } else {
-                client?.setScreen(null)
+                client?.gui?.setScreen(null)
                 CaptureManager.start(value)
             }
             return true

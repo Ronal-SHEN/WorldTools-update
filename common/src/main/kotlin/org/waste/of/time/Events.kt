@@ -69,12 +69,12 @@ object Events {
     }
 
     fun onClientTickStart() {
-        if (CAPTURE_KEY.consumeClick() && mc.level != null && mc.screen == null) {
+        if (CAPTURE_KEY.consumeClick() && mc.level != null && mc.gui.screen() == null) {
             CaptureManager.toggleCapture()
         }
 
-        if (CONFIG_KEY.consumeClick() && mc.level != null && mc.screen == null) {
-            mc.setScreen(ManagerScreen)
+        if (CONFIG_KEY.consumeClick() && mc.level != null && mc.gui.screen() == null) {
+            mc.setScreenAndShow(ManagerScreen)
         }
 
         if (!capturing) return
@@ -127,11 +127,11 @@ object Events {
             val label = translateHighlight("worldtools.gui.escape.button.finish_download", currentLevelName)
             Button.builder(label) {
                 CaptureManager.stop()
-                mc.setScreen(null)
+                mc.gui.setScreen(null)
             }.width(204).build()
         } else {
             Button.builder(MessageManager.brand) {
-                Minecraft.getInstance().setScreen(ManagerScreen)
+                Minecraft.getInstance().setScreenAndShow(ManagerScreen)
             }.width(204).build()
         }
 

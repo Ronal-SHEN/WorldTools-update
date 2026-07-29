@@ -40,8 +40,7 @@ object MessageManager {
     fun sendError(translateKey: String, vararg args: Any) = Component.translatable(translateKey, *args).sendError()
 
     fun Component.infoToast() {
-        SystemToast.multiline(
-            mc,
+        SystemToast(
             SystemToast.SystemToastId.WORLD_BACKUP,
             brand,
             this
@@ -49,8 +48,7 @@ object MessageManager {
     }
 
     private fun Component.errorToast() {
-        SystemToast.multiline(
-            mc,
+        SystemToast(
             SystemToast.SystemToastId.WORLD_ACCESS_FAILURE,
             brand,
             this
@@ -74,7 +72,7 @@ object MessageManager {
         if (!config.advanced.showChatMessages) return
 
         mc.execute {
-            mc.gui.chat.addClientSystemMessage(this)
+            mc.gui.hud.chat.addClientSystemMessage(this)
         }
     }
 
@@ -82,7 +80,7 @@ object MessageManager {
         if (!config.advanced.showToasts) return
 
         mc.execute {
-            mc.toastManager.addToast(this)
+            mc.gui.toastManager().addToast(this)
         }
     }
 
