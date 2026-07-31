@@ -14,13 +14,12 @@ abstract class RegionBased(
 ) : Storeable() {
     val dimension: String = world.dimension().identifier().path
 
+    // 26.x stores every dimension - the overworld included - under dimensions/<namespace>/<path>;
+    // the root-level region/ and the DIM-1/DIM1 folders are gone. The namespace stays hardcoded
+    // to minecraft because the capture re-registers every dimension as minecraft:<path> in
+    // level.dat and in the player's Dimension tag.
     private val dimensionPath
-        get() = when (dimension) {
-            "overworld" -> ""
-            "the_nether" -> "DIM-1/"
-            "the_end" -> "DIM1/"
-            else -> "dimensions/minecraft/$dimension/"
-        }
+        get() = "dimensions/minecraft/$dimension/"
 
     abstract fun compound(): CompoundTag
 
