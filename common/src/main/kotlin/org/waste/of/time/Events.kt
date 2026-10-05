@@ -17,6 +17,7 @@ import net.minecraft.world.level.chunk.LevelChunk
 import org.waste.of.time.Utils.manhattanDistance2d
 import org.waste.of.time.WorldTools.CAPTURE_KEY
 import org.waste.of.time.WorldTools.CONFIG_KEY
+import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.config
 import org.waste.of.time.WorldTools.mc
 import org.waste.of.time.gui.ManagerScreen
@@ -140,8 +141,15 @@ object Events {
 
     fun onScreenRemoved(screen: Screen) {
         if (!capturing) return
-        DataInjectionHandler.onScreenRemoved(screen)
-        HotCache.lastInteractedBlockEntity = null
+        // runs inside vanilla's open-screen/disconnect handling: an exception here makes the
+        // client drop the connection, and a stale lastInteractedBlockEntity then crashes the game
+        try {
+            DataInjectionHandler.onScreenRemoved(screen)
+        } catch (e: Exception) {
+            LOG.error("Failed to capture container contents from ${screen.javaClass.simpleName}", e)
+        } finally {
+            HotCache.lastInteractedBlockEntity = null
+        }
     }
 
     fun onEntityRemoved(entity: Entity, reason: Entity.RemovalReason) {

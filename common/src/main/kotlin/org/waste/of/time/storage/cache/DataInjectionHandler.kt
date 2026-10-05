@@ -10,6 +10,8 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.vehicle.minecart.MinecartHopper
 import net.minecraft.world.entity.vehicle.ContainerEntity
 import net.minecraft.world.inventory.PlayerEnderChestContainer
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import org.waste.of.time.WorldTools.mc
 import org.waste.of.time.storage.cache.HotCache.markScanned
@@ -39,15 +41,11 @@ object DataInjectionHandler {
     }
 
     private fun ContainerEntity.dataToVehicle(screen: ContainerScreen) {
-        screen.getContainerSlots().forEach {
-            setItem(it.containerSlot, it.item)
-        }
+        injectSlots(screen.getContainerSlots())
     }
 
     private fun MinecartHopper.dataToHopperMinecart(screen: HopperScreen) {
-        screen.getContainerSlots().forEach {
-            setItem(it.containerSlot, it.item)
-        }
+        injectSlots(screen.getContainerSlots())
     }
 
     private fun handleBlockEntity(screen: Screen, blockEntity: BlockEntity, ) {
@@ -115,21 +113,15 @@ object DataInjectionHandler {
     }
 
     private fun AbstractFurnaceBlockEntity.dataToFurnace(screen: AbstractFurnaceScreen<*>) {
-        screen.getContainerSlots().forEach {
-            setItem(it.containerSlot, it.item)
-        }
+        injectSlots(screen.getContainerSlots())
     }
 
     private fun BarrelBlockEntity.dataToBarrelBlock(screen: ContainerScreen) {
-        screen.getContainerSlots().forEach {
-            setItem(it.containerSlot, it.item)
-        }
+        injectSlots(screen.getContainerSlots())
     }
 
     private fun BrewingStandBlockEntity.dataToBrewingStand(screen: BrewingStandScreen) {
-        screen.getContainerSlots().forEach {
-            setItem(it.containerSlot, it.item)
-        }
+        injectSlots(screen.getContainerSlots())
     }
 
     private fun ChestBlockEntity.dataToChest(screen: ContainerScreen) {
@@ -139,13 +131,10 @@ object DataInjectionHandler {
         val inventories = containerSlots.partition { it.containerSlot < 27 }
 
         when (chestType) {
-            ChestType.SINGLE -> {
-                containerSlots.forEach {
-                    setItem(it.containerSlot, it.item)
-                }
-            }
+            ChestType.SINGLE -> injectSlots(containerSlots)
 
             ChestType.LEFT -> {
+                if (containerSlots.size != DOUBLE_CHEST_SIZE) return
                 val pos = blockPos.relative(facing.clockWise)
                 val otherChest = level?.getBlockEntity(pos)
                 if (otherChest !is ChestBlockEntity) return
@@ -161,6 +150,7 @@ object DataInjectionHandler {
             }
 
             ChestType.RIGHT -> {
+                if (containerSlots.size != DOUBLE_CHEST_SIZE) return
                 val pos = blockPos.relative(facing.counterClockWise)
                 val otherChest = level?.getBlockEntity(pos)
                 if (otherChest !is ChestBlockEntity) return
@@ -178,21 +168,15 @@ object DataInjectionHandler {
     }
 
     private fun DispenserBlockEntity.dataToDispenserOrDropper(screen: DispenserScreen) {
-        screen.getContainerSlots().forEach {
-            setItem(it.containerSlot, it.item)
-        }
+        injectSlots(screen.getContainerSlots())
     }
 
     private fun HopperBlockEntity.dataToHopper(screen: HopperScreen) {
-        screen.getContainerSlots().forEach {
-            setItem(it.containerSlot, it.item)
-        }
+        injectSlots(screen.getContainerSlots())
     }
 
     private fun ShulkerBoxBlockEntity.dataToShulkerBox(screen: ShulkerBoxScreen) {
-        screen.getContainerSlots().forEach {
-            setItem(it.containerSlot, it.item)
-        }
+        injectSlots(screen.getContainerSlots())
     }
 
     private fun LecternBlockEntity.dataToLectern(screen: LecternScreen) {
@@ -200,11 +184,26 @@ object DataInjectionHandler {
     }
 
     private fun CrafterBlockEntity.dataToCrafter(screen: CrafterScreen) {
-        screen.getContainerSlots().forEach {
+        val slots = screen.getContainerSlots()
+        if (slots.size != containerSize) return
+        slots.forEach {
             setItem(it.containerSlot, it.item)
             setSlotState(it.containerSlot, !isSlotDisabled(it.containerSlot))
         }
     }
 
     private fun AbstractContainerScreen<*>.getContainerSlots() = menu.slots.filter { it.container !is Inventory }
+
+    // Servers often show their own GUIs in chest-style menus after you click a container block
+    // (crates, shops, selectors), so the closing screen may not belong to the last interacted
+    // container at all. Only inject when the slot count matches; otherwise the data is unrelated
+    // and writing it would overflow the container (Index 27 out of bounds for length 27).
+    private fun Container.injectSlots(slots: List<Slot>) {
+        if (slots.size != containerSize) return
+        slots.forEach {
+            setItem(it.containerSlot, it.item)
+        }
+    }
+
+    private const val DOUBLE_CHEST_SIZE = 54
 }
