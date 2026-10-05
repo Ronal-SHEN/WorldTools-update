@@ -2,6 +2,7 @@ package org.waste.of.time.neoforge
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
+import dev.nyon.klf.MOD_BUS
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands.argument
 import net.minecraft.commands.Commands.literal
@@ -12,6 +13,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent
 import net.neoforged.neoforge.client.event.ScreenEvent
+import net.neoforged.neoforge.common.NeoForge
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent
 import net.neoforged.neoforge.event.level.ChunkEvent
@@ -19,8 +21,6 @@ import org.waste.of.time.Events
 import org.waste.of.time.WorldTools
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.manager.CaptureManager
-import thedarkcolour.kotlinforforge.neoforge.forge.FORGE_BUS
-import thedarkcolour.kotlinforforge.neoforge.forge.MOD_BUS
 
 @Mod(WorldTools.MOD_ID)
 object WorldToolsNeoForge {
@@ -30,31 +30,31 @@ object WorldToolsNeoForge {
             it.register(WorldTools.CAPTURE_KEY)
             it.register(WorldTools.CONFIG_KEY)
         }
-        FORGE_BUS.addListener<RegisterClientCommandsEvent> {
+        NeoForge.EVENT_BUS.addListener<RegisterClientCommandsEvent> {
             it.dispatcher.register()
         }
-        FORGE_BUS.addListener<ClientPlayerNetworkEvent.LoggingIn> {
+        NeoForge.EVENT_BUS.addListener<ClientPlayerNetworkEvent.LoggingIn> {
             Events.onClientJoin()
         }
-        FORGE_BUS.addListener<ClientPlayerNetworkEvent.LoggingOut> {
+        NeoForge.EVENT_BUS.addListener<ClientPlayerNetworkEvent.LoggingOut> {
             Events.onClientDisconnect()
         }
-        FORGE_BUS.addListener<EntityJoinLevelEvent> {
+        NeoForge.EVENT_BUS.addListener<EntityJoinLevelEvent> {
             Events.onEntityLoad(it.entity)
         }
-        FORGE_BUS.addListener<EntityLeaveLevelEvent> {
+        NeoForge.EVENT_BUS.addListener<EntityLeaveLevelEvent> {
             Events.onEntityUnload(it.entity)
         }
-        FORGE_BUS.addListener<ClientTickEvent.Pre> {
+        NeoForge.EVENT_BUS.addListener<ClientTickEvent.Pre> {
             Events.onClientTickStart()
         }
-        FORGE_BUS.addListener<ChunkEvent.Load> {
+        NeoForge.EVENT_BUS.addListener<ChunkEvent.Load> {
             if (it.chunk is LevelChunk) Events.onChunkLoad(it.chunk as LevelChunk)
         }
-        FORGE_BUS.addListener<ChunkEvent.Unload> {
+        NeoForge.EVENT_BUS.addListener<ChunkEvent.Unload> {
             if (it.chunk is LevelChunk) Events.onChunkUnload(it.chunk as LevelChunk)
         }
-        FORGE_BUS.addListener<ScreenEvent.Closing> {
+        NeoForge.EVENT_BUS.addListener<ScreenEvent.Closing> {
             Events.onScreenRemoved(it.screen)
         }
 

@@ -15,8 +15,8 @@ loom {
 }
 
 repositories {
-    maven("https://thedarkcolour.github.io/KotlinForForge/") {
-        name = "KotlinForForge"
+    maven("https://repo.nyon.dev/releases") {
+        name = "KotlinLangForge"
     }
     maven("https://maven.neoforged.net/releases/") {
         name = "NeoForged"
@@ -34,7 +34,7 @@ val common: Configuration by configurations.creating {
 
 dependencies {
     neoForge("net.neoforged:neoforge:${project.properties["neoforge_version"]!!}")
-    implementation("thedarkcolour:kotlinforforge-neoforge:${project.properties["kotlin_forge_version"]!!}")
+    implementation("dev.nyon:KotlinLangForge:${project.properties["klf_version"]!!}")
     common(project(":common")) { isTransitive = false }
     shadowCommon(project(":common")) { isTransitive = false }
     api("me.shedaniel.cloth:cloth-config-neoforge:${project.properties["cloth_config_version"]}")

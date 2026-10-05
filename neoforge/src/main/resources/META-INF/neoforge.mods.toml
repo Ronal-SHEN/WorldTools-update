@@ -1,5 +1,7 @@
-modLoader = "kotlinforforge"
-loaderVersion = "[5,)"
+# KotlinLangForge is a language loader (FMLModType: LIBRARY), not a regular mod, so it
+# cannot be listed under [[dependencies]]; its minimum version is enforced here instead
+modLoader = "klf"
+loaderVersion = "[2.14,)"
 license = "GNU General Public License v3.0"
 issueTrackerURL = "https://github.com/Ronal-SHEN/WorldTools-update/issues"
 
@@ -32,13 +34,6 @@ modId = "minecraft"
 type = "required"
 versionRange = "[26.3,)"
 ordering = "NONE"
-side = "CLIENT"
-
-[[dependencies.worldtools]]
-modId = "kotlinforforge"
-type = "required"
-versionRange = "[5,)"
-ordering = "AFTER"
 side = "CLIENT"
 
 [[dependencies.worldtools]]
