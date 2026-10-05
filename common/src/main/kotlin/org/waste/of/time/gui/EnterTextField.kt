@@ -5,7 +5,7 @@ import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.components.EditBox
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.network.chat.Component
-import org.lwjgl.glfw.GLFW
+import com.mojang.blaze3d.platform.InputConstants
 import org.waste.of.time.manager.CaptureManager
 
 class EnterTextField(
@@ -13,7 +13,7 @@ class EnterTextField(
 ) : EditBox(textRenderer, x, y, width, height, message) {
 
     override fun keyPressed(keyEvent: KeyEvent): Boolean {
-        if (keyEvent.key() == GLFW.GLFW_KEY_ENTER) {
+        if (keyEvent.key() == InputConstants.KEY_RETURN) {
             if (CaptureManager.capturing) {
                 client?.gui?.setScreen(null)
                 CaptureManager.stop()

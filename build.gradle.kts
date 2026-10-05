@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     kotlin("jvm") version ("2.3.21")
-    id("architectury-plugin") version "3.5.167"
+    id("architectury-plugin") version "3.5.170"
     id("dev.architectury.loom-no-remap") version "1.17-SNAPSHOT" apply false
     id("com.gradleup.shadow") version "9.4.2" apply false
 }

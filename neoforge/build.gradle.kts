@@ -7,6 +7,11 @@ base.archivesName.set("${base.archivesName.get()}-neoforge")
 
 loom {
     accessWidenerPath.set(project(":common").loom.accessWidenerPath)
+    // dev runs only pick up build/classes/java/main as mod classes, so the Kotlin @Mod object
+    // was never constructed in :neoforge:runClient; add the Kotlin output to the dev mod too
+    mods {
+        maybeCreate("main").modFiles.from(layout.buildDirectory.dir("classes/kotlin/main"))
+    }
 }
 
 repositories {

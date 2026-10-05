@@ -11,7 +11,6 @@ import net.minecraft.resources.Identifier
 import com.mojang.blaze3d.platform.InputConstants
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.lwjgl.glfw.GLFW
 import org.waste.of.time.config.WorldToolsConfig
 
 object WorldTools {
@@ -30,10 +29,10 @@ object WorldTools {
     val LOG: Logger = LogManager.getLogger()
     private val KEY_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "categories"))
     var CAPTURE_KEY = KeyMapping(
-        "$MOD_ID.key.toggle_capture", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F12, KEY_CATEGORY
+        "$MOD_ID.key.toggle_capture", InputConstants.Type.KEYBOARD, InputConstants.KEY_F12, KEY_CATEGORY
     )
     var CONFIG_KEY = KeyMapping(
-        "$MOD_ID.key.open_config", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F10, KEY_CATEGORY
+        "$MOD_ID.key.open_config", InputConstants.Type.KEYBOARD, InputConstants.KEY_F10, KEY_CATEGORY
     )
 
     val mc: Minecraft get() = Minecraft.getInstance()
